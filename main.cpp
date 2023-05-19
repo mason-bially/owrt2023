@@ -1,6 +1,8 @@
 #include <iostream>
 #include <iomanip>
 
+#include "vmath.hpp"
+
 auto main() -> int
 {
     constexpr int image_width = 256;
