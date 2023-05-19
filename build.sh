@@ -1,2 +1,2 @@
 
-clang++ -Wall -O3 main.cpp -o rt
+g++ -Wall -O3 -std=c++23 main.cpp -o rt
