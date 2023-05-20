@@ -18,10 +18,12 @@ TODO:
 */
 namespace color
 {
+    using namespace common;
+
     /* Concepts */
 
     template<typename T>
-    concept N3Like = common::N3<T>;
+    concept N3Like = common::CN3Like<T>;
 
     template<typename T>
     concept N3Full = N3Like<T>;
@@ -117,25 +119,25 @@ namespace color
     template<N3Full TN3>
     constexpr auto operator+(TN3 const& u, TN3 const& v)
     {
-        return TN3 { u.x + v.x, u.y + v.y, u.z + v.z };
+        return TN3 { u.r + v.r, u.g + v.g, u.b + v.b };
     }
 
     template<N3Full TN3>
     constexpr auto operator-(TN3 const& u, TN3 const& v)
     {
-        return TN3 { u.x - v.x, u.y - v.y, u.z - v.z };
+        return TN3 { u.r - v.r, u.g - v.g, u.b - v.b };
     }
     
     template<N3Full TN3>
     constexpr auto operator*(TN3 const& u, TN3 const& v)
     {
-        return TN3 { u.x * v.x, u.y * v.y, u.z * v.z };
+        return TN3 { u.r * v.r, u.g * v.g, u.b * v.b };
     }
 
     template<N3Full TN3>
     constexpr auto operator*(typename TN3::Num t, TN3 const& v)
     {
-        return TN3 { t*v.x, t*v.y, t*v.z };
+        return TN3 { t*v.r, t*v.g, t*v.b };
     }
 
     template<N3Full TN3>
@@ -151,7 +153,6 @@ namespace color
     }
 }
 
-    
 template <typename TNum>
 struct std::tuple_size<color::Color3<TNum>>
     : public integral_constant<std::size_t, color::Color3<TNum>::size()> {};

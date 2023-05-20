@@ -18,13 +18,15 @@ TODO:
 */
 namespace vmath
 {
+    using namespace common;
+
     /* Concepts */
 
     template<typename T>
     concept IsAffine = T::IsAffineSpace();
 
     template<typename T>
-    concept N3Like = common::N3<T> and requires {
+    concept N3Like = common::CN3Like<T> and requires {
             { T::IsAffineSpace() } -> std::convertible_to<bool>;
         } and requires(T n) {
             { affine(n) } -> IsAffine;
@@ -55,7 +57,7 @@ namespace vmath
 
         /* prefer `std::get<i>(vec)` for compile time access */
 
-        constexpr auto size() { return std::tuple_size_v<TActual>; }
+        static constexpr auto size() { return 3; }
         // for runtime array access
         constexpr auto operator[](int i)
         {
@@ -119,7 +121,7 @@ namespace vmath
 
         static constexpr auto IsAffineSpace() { return true; }
     };
-    template<class Num> Vec3 (Num x, Num y, Num z) -> Vec3<Num>;
+    template<class NX, class NY, class NZ> Vec3 (NX, NY, NZ) -> Vec3<numeric_promote_t<NX, NY, NZ>>;
     template<class Num> constexpr auto affine (Vec3<Num> n) { return n; }
 
 
@@ -136,7 +138,7 @@ namespace vmath
 
         constexpr explicit operator Vec3<Num>() { return Vec3 { x, y, z }; }
     };
-    template<class Num> Loc3 (Num x, Num y, Num z) -> Loc3<Num>;
+    template<class NX, class NY, class NZ> Loc3 (NX, NY, NZ) -> Loc3<numeric_promote_t<NX, NY, NZ>>;
     template<class Num> constexpr auto affine (Loc3<Num> n) { return (Vec3<Num>) n; }
 
     /* Utility Functions */
@@ -160,8 +162,7 @@ namespace vmath
         else if constexpr (IsAffine<TN3A> and !IsAffine<TN3B>)
             return TN3B { u.x - v.x, u.y - v.y, u.z - v.z };
         else
-            static_assert(IsAffine<TN3A> or IsAffine<TN3B>,
-                "Cannont operate across two non-affine types.");
+            return affine(u) - affine(v);
     }
 
     template<N3Affine TN3>
@@ -202,3 +203,11 @@ namespace vmath
 
     constexpr auto unit_vector(N3Full auto const& v) { return affine(v) / v.length(); }
 }
+
+template <typename TNum>
+struct std::tuple_size<vmath::Vec3<TNum>>
+    : public integral_constant<std::size_t, vmath::Vec3<TNum>::size()> {};
+
+template <typename TNum>
+struct std::tuple_size<vmath::Loc3<TNum>>
+    : public integral_constant<std::size_t, vmath::Loc3<TNum>::size()> {};
