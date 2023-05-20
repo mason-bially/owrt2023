@@ -4,12 +4,16 @@
 #include "vmath.hpp"
 #include "color.hpp"
 
+#include "ray.hpp"
+
 using color::Color3;
 
 auto main() -> int
 {
     constexpr int image_width = 256;
     constexpr int image_height = 256;
+
+    vmath::Ray r;
 
     std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
     for (auto j = image_height-1; j >= 0; --j)
