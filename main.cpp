@@ -9,12 +9,29 @@
 using color::Color3;
 using vmath::Vec3;
 using vmath::Loc3;
+using vmath::Ray;
 
-template<typename TNum = double>
-auto ray_color(vmath::Ray<TNum> const& r)
+
+template<vmath::RayLike TRay>
+bool hit_sphere(typename TRay::Loc const& center, typename TRay::Num radius, TRay const& r) {
+    using namespace common;
+
+    auto oc = r.origin - center;
+    auto a = dot(r.direction, r.direction);
+    auto b = 2.0 * dot(oc, r.direction);
+    auto c = dot(oc, oc) - radius*radius;
+    auto discriminant = b*b - 4*a*c;
+    return (discriminant > 0);
+}
+
+template<typename Color = Color3<double>>
+auto ray_color(vmath::RayLike auto const& r)
 {
-    constexpr auto color_top = Color3 { 1.0, 1.0, 1.0 };
-    constexpr auto color_bot = Color3 { 0.5, 0.7, 1.0 };
+    if (hit_sphere({0,0,-1}, 0.5, r))
+        return Color::Red;
+
+    constexpr auto color_top = Color::White;
+    constexpr auto color_bot = Color { 0.5, 0.7, 1.0 };
 
     auto unit_direction = vmath::unit_vector(r.direction);
     auto t = 0.5*(unit_direction.y + 1.0);
@@ -24,6 +41,7 @@ auto ray_color(vmath::Ray<TNum> const& r)
 auto main() -> int
 {
     // Image
+
     constexpr auto aspect_ratio = 16.0 / 9.0;
     constexpr int image_width = 400;
     constexpr int image_height = static_cast<int>(image_width / aspect_ratio);
@@ -34,7 +52,7 @@ auto main() -> int
     auto viewport_width = aspect_ratio * viewport_height;
     auto focal_length = 1.0;
 
-    Loc3 origin;
+    auto origin = Loc3<double>::Origin;
     Vec3 horizontal { viewport_width, 0, 0 };
     Vec3 vertical { 0, viewport_height, 0 };
     auto lower_left_corner = origin - horizontal/2 - vertical/2 - Vec3{0, 0, focal_length};

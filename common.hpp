@@ -67,17 +67,14 @@ namespace common
     /* Utility Functions */
 
     // TODO ostream concept?
-    constexpr auto operator<<(std::ostream &out, CN2Like auto const& n) -> std::ostream&
+    constexpr auto operator<<(std::ostream &out, CNLike auto const& n) -> std::ostream&
     {
-        return out << get<0>(n) << ' ' << get<1>(n);
-    }
-    constexpr auto operator<<(std::ostream &out, CN3Like auto const& n) -> std::ostream&
-    {
-        return out << get<0>(n) << ' ' << get<1>(n) << ' ' << get<2>(n);
-    }
-    constexpr auto operator<<(std::ostream &out, CN4Like auto const& n) -> std::ostream&
-    {
-        return out << get<0>(n) << ' ' << get<1>(n) << ' ' << get<2>(n) << ' ' << get<3>(n);
+        out << get<0>(n) << ' ' << get<1>(n);
+        if constexpr (n.size() > 2)
+            out << ' ' << get<2>(n);
+        if constexpr (n.size() > 3)
+            out << ' ' << get<3>(n);
+        return out;
     }
 
     template<CNLike N>

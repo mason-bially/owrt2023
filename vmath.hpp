@@ -96,16 +96,16 @@ namespace vmath
     constexpr auto get (N3<TActual, TNum>& n)
     {
         if constexpr (I == 0) return n.x;
-        else if constexpr (I == 1) return n.x;
-        else if constexpr (I == 2) return n.x;
+        else if constexpr (I == 1) return n.y;
+        else if constexpr (I == 2) return n.z;
         else static_assert("Get Index out of Range");
     }
     template <unsigned I, typename TActual, typename TNum>
     constexpr auto get (N3<TActual, TNum> const& n)
     {
         if constexpr (I == 0) return n.x;
-        else if constexpr (I == 1) return n.x;
-        else if constexpr (I == 2) return n.x;
+        else if constexpr (I == 1) return n.y;
+        else if constexpr (I == 2) return n.z;
         else static_assert("Get Index out of Range");
     }
 
@@ -129,10 +129,13 @@ namespace vmath
     struct Loc3
         : public N3<Loc3<Num>, Num>
     {
-        using Base = N3<Loc3<Num>, Num>;
+        using Self = Loc3<Num>;
+        using Base = N3<Self, Num>;
         using Base::x;
         using Base::y;
         using Base::z;
+
+        static constexpr Self Origin { 0, 0, 0 };
 
         static constexpr auto IsAffineSpace() { return false; }
 
@@ -187,7 +190,7 @@ namespace vmath
     constexpr auto dot(TN3 const& u, TN3 const& v)
     {
         auto [ux, uy, uz] = u; auto [vx, vy, vz] = v;
-        return ux * vx + uy * vy + uz * vy;
+        return ux * vx + uy * vy + uz * vz;
     }
 
     template<N3Affine TN3>
@@ -208,6 +211,16 @@ template <typename TNum>
 struct std::tuple_size<vmath::Vec3<TNum>>
     : public integral_constant<std::size_t, vmath::Vec3<TNum>::size()> {};
 
+template <std::size_t I, typename TNum>
+struct std::tuple_element<I, vmath::Vec3<TNum>> {
+    using type = TNum;
+};
+
 template <typename TNum>
 struct std::tuple_size<vmath::Loc3<TNum>>
     : public integral_constant<std::size_t, vmath::Loc3<TNum>::size()> {};
+
+template <std::size_t I, typename TNum>
+struct std::tuple_element<I, vmath::Loc3<TNum>> {
+    using type = TNum;
+};

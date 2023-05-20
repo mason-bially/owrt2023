@@ -96,10 +96,23 @@ namespace color
     struct Color3
         : public N3<Color3<TNum>, TNum>
     {
-        using Base = N3<Color3<TNum>, TNum>;
+        using Self = Color3<TNum>;
+        using Base = N3<Self, TNum>;
         using Base::r;
         using Base::g;
         using Base::b;
+
+        static constexpr TNum NumZero = 0;
+        static constexpr TNum NumLimit = 1; // TODO make MAX INT when an int?
+
+        static constexpr Self White { NumLimit, NumLimit, NumLimit };
+        static constexpr Self Black { NumZero, NumZero, NumZero };
+        static constexpr Self Red { NumLimit, NumZero, NumZero };
+        static constexpr Self Green { NumZero, NumLimit, NumZero };
+        static constexpr Self Blue { NumZero, NumZero, NumLimit };
+        static constexpr Self Yellow { NumLimit, NumLimit, NumZero };
+        static constexpr Self Teal { NumZero, NumLimit, NumLimit };
+        static constexpr Self Magenta { NumLimit, NumZero, NumLimit };
     };
     template<class Num> Color3 (Num x, Num y, Num z) -> Color3<Num>;
 
@@ -156,3 +169,8 @@ namespace color
 template <typename TNum>
 struct std::tuple_size<color::Color3<TNum>>
     : public integral_constant<std::size_t, color::Color3<TNum>::size()> {};
+
+template <std::size_t I, typename TNum>
+struct std::tuple_element<I, color::Color3<TNum>> {
+    using type = TNum;
+};
