@@ -5,6 +5,7 @@
 #include "color.hpp"
 
 #include "ray.hpp"
+#include "sphere.hpp"
 
 using color::Color3;
 using vmath::Vec3;
