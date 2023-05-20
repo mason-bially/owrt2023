@@ -13,18 +13,17 @@ using vmath::Ray;
 
 
 template<vmath::RayLike TRay>
-auto hit_sphere(typename TRay::Loc const& center, typename TRay::Num radius, TRay const& r) {
-    using namespace common;
-
+auto hit_sphere(typename TRay::Loc const& center, typename TRay::Num radius, TRay const& r)
+{
     auto oc = r.origin - center;
-    auto a = dot(r.direction, r.direction);
-    auto b = 2.0 * dot(oc, r.direction);
-    auto c = dot(oc, oc) - radius*radius;
-    auto discriminant = b*b - 4*a*c;
+    auto a = r.direction.length_squared();
+    auto half_b = dot(oc, r.direction);
+    auto c = oc.length_squared() - radius*radius;
+    auto discriminant = half_b*half_b - a*c;
     if (discriminant < 0)
         return -1.0;
     else
-        return (-b - std::sqrt(discriminant)) / (2.0*a);
+        return (-half_b - std::sqrt(discriminant)) / a;
 }
 
 template<typename Color = Color3<double>>
@@ -65,8 +64,6 @@ auto main() -> int
     auto lower_left_corner = origin - horizontal/2 - vertical/2 - Vec3{0, 0, focal_length};
 
     // Render
-
-    vmath::Ray r;
 
     std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
     for (auto j = image_height-1; j >= 0; --j)
