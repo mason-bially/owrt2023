@@ -5,6 +5,8 @@
 #include <cmath>
 #include <iostream>
 
+#include "common.hpp"
+
 /*
 Notable changes from the book:
     - Templated over value type
@@ -22,13 +24,9 @@ namespace vmath
     concept IsAffine = T::IsAffineSpace();
 
     template<typename T>
-    concept N3Like = requires {
-            typename T::Num;
+    concept N3Like = common::N3<T> and requires {
             { T::IsAffineSpace() } -> std::convertible_to<bool>;
         } and requires(T n) {
-            { get<0>(n) } -> std::convertible_to<typename T::Num>;
-            { get<1>(n) } -> std::convertible_to<typename T::Num>;
-            { get<2>(n) } -> std::convertible_to<typename T::Num>;
             { affine(n) } -> IsAffine;
         };
 
@@ -57,7 +55,7 @@ namespace vmath
 
         /* prefer `std::get<i>(vec)` for compile time access */
 
-        constexpr auto size() { return std::tuple_size<TActual>(); }
+        constexpr auto size() { return std::tuple_size_v<TActual>; }
         // for runtime array access
         constexpr auto operator[](int i)
         {
@@ -142,12 +140,6 @@ namespace vmath
     template<class Num> constexpr auto affine (Loc3<Num> n) { return (Vec3<Num>) n; }
 
     /* Utility Functions */
-
-    // TODO ostream concept?
-    constexpr auto operator<<(std::ostream &out, N3Like auto const& n)
-    {
-        return out << get<0>(n) << ' ' << get<1>(n) << ' ' << get<2>(n);
-    }
 
     template<N3Full TN3A, N3Full TN3B>
     constexpr auto operator+(TN3A const& u, TN3B const& v)
