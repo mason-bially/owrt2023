@@ -14,6 +14,12 @@ namespace object
         Loc point;
         Vec normal;
         Num t;
+        bool front_face;
+
+        constexpr void set_face_normal(vmath::RayLike auto const& r, Vec const& outward_normal) {
+            front_face = dot(r.direction(), outward_normal) < 0;
+            normal = front_face ? outward_normal :-outward_normal;
+        }
     };
 
     template<typename TNum>
