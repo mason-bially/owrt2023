@@ -37,9 +37,8 @@ auto ray_color(vmath::RayLike auto const& r, World& world)
 {
     using namespace common;
 
-    typename World::HitRec rec;
-    if (world.hit(r, 0, infinity, rec)) {
-        auto& n = rec.normal;
+    if (auto hit = world.hit(r.span(0, infinity)); hit) {
+        auto& n = hit->normal;
         return 0.5 * Color{n.x+1, n.y+1, n.z+1};
     }
 

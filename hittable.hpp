@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <optional>
 
 #include "ray.hpp"
 
@@ -29,8 +30,8 @@ namespace object
     concept Hittable = requires {
         typename T::Num;
         std::same_as<typename T::Num, TNum>;
-    } and requires (T h, vmath::Ray<TNum> r, TNum min, TNum max, HitRecord<TNum> hitrec) {
-        { h.hit(r, min, max, hitrec) } -> std::convertible_to<bool>;
+    } and requires (T h, vmath::RaySegment<TNum> seg) {
+        { h.hit(seg) } -> std::convertible_to<std::optional<HitRecord<TNum>>>;
     };
 
     template<class TNum, template<class> typename THittableVariant>
@@ -49,22 +50,24 @@ namespace object
             objects.emplace_back(std::forward<THittable<Num>&&>(hittable));
         }
 
-        constexpr auto hit(vmath::RayLike auto const& r, TNum t_min, TNum t_max, HitRec& rec) const
+        constexpr auto hit(vmath::RaySegLike auto seg) const
         {
-            HitRec temp_rec;
-            bool hit_anything = false;
-            auto closest_so_far = t_max;
+            std::optional<HitRec> rec;
 
-            for (const auto& object : objects) {
-                bool hit = std::visit([&](auto&& o) { return o.hit(r, t_min, closest_so_far, temp_rec); }, object);
+            for (const auto& object : objects)
+            {
+                auto hit = std::visit([&](auto&& o) { return o.hit(seg); }, object)
+                    //.and_then([&](auto const& hit) { seg.t_max = hit.t; return hit; })
+                    //.or_else(*rec)
+                    ;
+                // TODO temp untill full c++23
                 if (hit) {
-                    hit_anything = true;
-                    closest_so_far = temp_rec.t;
-                    rec = temp_rec;
+                    rec = hit;
+                    seg.t_max = rec->t;
                 }
             }
 
-            return hit_anything;
+            return rec;
         }
     };
 }
