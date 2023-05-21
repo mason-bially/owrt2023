@@ -78,9 +78,9 @@ auto main() -> int
             const auto v = double(j) / (image_height-1);
             
             vmath::Ray r { origin, lower_left_corner + u*horizontal + v*vertical - origin };
-            Color3 pixel_color = ray_color(r);
+            auto pixel_color = ray_color(r);
             
-            std::cout << pixel_color << '\n';
+            std::cout << color_cast<Color3<uint8_t>>(pixel_color) << '\n';
         }
     }
 

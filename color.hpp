@@ -94,7 +94,7 @@ namespace color
         else static_assert("Get Index out of Range");
     }
 
-    template<class TNum = double, TNum NLimit = TNum(1)>
+    template<class TNum = double>
     struct Color3
         : public Tup3Base<Color3<TNum>, TNum>
     {
@@ -107,10 +107,8 @@ namespace color
         using Base::g;
         using Base::b;
 
-        static constexpr Num Limit = NLimit;
-
         static constexpr Num NumZero = 0;
-        static constexpr Num NumLimit = Limit;
+        static constexpr Num NumLimit = std::is_floating_point_v<Num> ? 1.0 : std::numeric_limits<TNum>::max();
 
         static constexpr Self White { NumLimit, NumLimit, NumLimit };
         static constexpr Self Black { NumZero, NumZero, NumZero };
@@ -129,11 +127,27 @@ namespace color
     constexpr auto operator <<(std::ostream &out, Tup3Like auto c) -> std::ostream&
     {
         // Write the translated [0,255] value of each color component.
-        constexpr double color_conv = 255.999;
         return out 
-            << static_cast<int>(color_conv * c.r) << ' '
-            << static_cast<int>(color_conv * c.g) << ' '
-            << static_cast<int>(color_conv * c.b);
+            << static_cast<int64_t>(c.r) << ' '
+            << static_cast<int64_t>(c.g) << ' '
+            << static_cast<int64_t>(c.b);
+    }
+
+    template<Tup3Like TDst, Tup3Like TSrc>
+    constexpr auto color_cast(TSrc src) -> TDst
+    {
+        if constexpr (TDst::NumLimit != 1.0)
+        {
+            constexpr double color_conv = TDst::NumLimit + 0.99999;
+            return TDst {
+                static_cast<typename TDst::Num>(src.r * color_conv),
+                static_cast<typename TDst::Num>(src.g * color_conv),
+                static_cast<typename TDst::Num>(src.b * color_conv)
+            };
+        }
+        else
+            static_assert(TDst::NumLimit == 1.0,
+                "Can only color cast to integral types.");
     }
 
     template<Tup3Like TN3>
