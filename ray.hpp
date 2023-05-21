@@ -7,12 +7,12 @@ namespace vmath
     template<typename T>
     concept RayLike = requires(T r)
     {
-        N3NonAffine<decltype(r.origin)>;
-        N3Affine<decltype(r.direction)>;
+        Tup3NonAffine<decltype(r.origin)>;
+        Tup3Affine<decltype(r.direction)>;
     }
     and requires(T r, typename T::Num t)
     {
-        N3NonAffine<decltype(r.at(t))>;
+        Tup3NonAffine<decltype(r.at(t))>;
     };
 
     template<class TNum = double>

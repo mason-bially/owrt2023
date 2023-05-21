@@ -26,24 +26,25 @@ namespace vmath
     concept IsAffine = T::IsAffineSpace();
 
     template<typename T>
-    concept N3Like = common::CN3Like<T> and requires {
+    concept Tup3LikePart0 = common::Tup3Like<T> and requires {
             { T::IsAffineSpace() } -> std::convertible_to<bool>;
         } and requires(T n) {
+            { n.length() } -> std::convertible_to<typename T::Num>;
             { affine(n) } -> IsAffine;
         };
 
     template<typename T>
-    concept N3Full = N3Like<T> and requires(T n) {
-            { affine(n) } -> N3Like;
+    concept Tup3Like = Tup3LikePart0<T> and requires(T n) {
+            { affine(n) } -> Tup3Like;
     };
 
-    template<typename T> concept N3Affine = N3Full<T> and IsAffine<T>;
-    template<typename T> concept N3NonAffine = N3Full<T> and !IsAffine<T>;
+    template<typename T> concept Tup3Affine = Tup3Like<T> and IsAffine<T>;
+    template<typename T> concept Tup3NonAffine = Tup3Like<T> and !IsAffine<T>;
 
     /* Classes */
 
     template<typename TActual, typename TNum>
-    struct N3
+    struct Tup3Base
     {
         using Num = TNum;
 
@@ -69,7 +70,7 @@ namespace vmath
             }
         }
 
-        constexpr auto operator+=(N3Affine auto vec)
+        constexpr auto operator+=(Tup3Affine auto vec)
         {
             x += get<0>(vec);
             z += get<1>(vec);
@@ -93,7 +94,7 @@ namespace vmath
         constexpr auto length() const { return std::sqrt(length_squared()); }
     };
     template <unsigned I, typename TActual, typename TNum>
-    constexpr auto get (N3<TActual, TNum>& n)
+    constexpr auto get (Tup3Base<TActual, TNum>& n)
     {
         if constexpr (I == 0) return n.x;
         else if constexpr (I == 1) return n.y;
@@ -101,7 +102,7 @@ namespace vmath
         else static_assert("Get Index out of Range");
     }
     template <unsigned I, typename TActual, typename TNum>
-    constexpr auto get (N3<TActual, TNum> const& n)
+    constexpr auto get (Tup3Base<TActual, TNum> const& n)
     {
         if constexpr (I == 0) return n.x;
         else if constexpr (I == 1) return n.y;
@@ -112,9 +113,9 @@ namespace vmath
 
     template<class Num = double>
     struct Vec3
-        : public N3<Vec3<Num>, Num>
+        : public Tup3Base<Vec3<Num>, Num>
     {
-        using Base = N3<Vec3<Num>, Num>;
+        using Base = Tup3Base<Vec3<Num>, Num>;
         using Base::x;
         using Base::y;
         using Base::z;
@@ -127,10 +128,10 @@ namespace vmath
 
     template<class Num = double>
     struct Loc3
-        : public N3<Loc3<Num>, Num>
+        : public Tup3Base<Loc3<Num>, Num>
     {
         using Self = Loc3<Num>;
-        using Base = N3<Self, Num>;
+        using Base = Tup3Base<Self, Num>;
         using Base::x;
         using Base::y;
         using Base::z;
@@ -146,7 +147,7 @@ namespace vmath
 
     /* Utility Functions */
 
-    template<N3Full TN3A, N3Full TN3B>
+    template<Tup3Like TN3A, Tup3Like TN3B>
     constexpr auto operator+(TN3A const& u, TN3B const& v)
     {
         if constexpr (IsAffine<TN3B>)
@@ -157,7 +158,7 @@ namespace vmath
             static_assert(IsAffine<TN3A> or IsAffine<TN3B>,
                 "Cannont operate across two non-affine types.");
     }
-    template<N3Full TN3A, N3Full TN3B>
+    template<Tup3Like TN3A, Tup3Like TN3B>
     constexpr auto operator-(TN3A const& u, TN3B const& v)
     {
         if constexpr (IsAffine<TN3B>)
@@ -168,32 +169,32 @@ namespace vmath
             return affine(u) - affine(v);
     }
 
-    template<N3Affine TN3>
+    template<Tup3Affine TN3>
     constexpr auto operator*(typename TN3::Num t, TN3 const& v)
     {
         return TN3 { t*v.x, t*v.y, t*v.z };
     }
 
-    template<N3Affine TN3>
+    template<Tup3Affine TN3>
     constexpr auto operator*(TN3 const& v, typename TN3::Num t)
     {
         return t * v;
     }
 
-    template<N3Affine TN3>
+    template<Tup3Affine TN3>
     constexpr auto operator/(TN3 const& v, typename TN3::Num t)
     {
         return (1/t) * v;
     }
 
-    template<N3Affine TN3>
+    template<Tup3Affine TN3>
     constexpr auto dot(TN3 const& u, TN3 const& v)
     {
         auto [ux, uy, uz] = u; auto [vx, vy, vz] = v;
         return ux * vx + uy * vy + uz * vz;
     }
 
-    template<N3Affine TN3>
+    template<Tup3Affine TN3>
     constexpr auto cross(TN3 const& u, TN3 const& v)
     {
         auto [ux, uy, uz] = u; auto [vx, vy, vz] = v;
@@ -204,7 +205,7 @@ namespace vmath
         };
     }
 
-    constexpr auto unit_vector(N3Full auto const& v) { return affine(v) / v.length(); }
+    constexpr auto unit_vector(Tup3Like auto const& v) { return affine(v) / v.length(); }
 }
 
 template <typename TNum>

@@ -23,15 +23,17 @@ namespace color
     /* Concepts */
 
     template<typename T>
-    concept N3Like = common::CN3Like<T>;
-
-    template<typename T>
-    concept N3Full = N3Like<T>;
+    concept Tup3Like = common::Tup3Like<T>
+        and requires(T c) {
+            { c.r } -> std::convertible_to<typename T::Num>;
+            { c.g } -> std::convertible_to<typename T::Num>;
+            { c.b } -> std::convertible_to<typename T::Num>;
+        };
 
     /* Classes */
 
     template<typename TActual, typename TNum>
-    struct N3
+    struct Tup3Base
     {
         using Num = TNum;
 
@@ -55,7 +57,7 @@ namespace color
             }
         }
 
-        constexpr auto operator+=(N3Like auto vec)
+        constexpr auto operator+=(Tup3Like auto vec)
         {
             r += get<0>(vec);
             g += get<1>(vec);
@@ -76,7 +78,7 @@ namespace color
         }
     };
     template <unsigned I, typename TActual, typename TNum>
-    constexpr auto get (N3<TActual, TNum>& n)
+    constexpr auto get (Tup3Base<TActual, TNum>& n)
     {
         if constexpr (I == 0) return n.r;
         else if constexpr (I == 1) return n.g;
@@ -84,7 +86,7 @@ namespace color
         else static_assert("Get Index out of Range");
     }
     template <unsigned I, typename TActual, typename TNum>
-    constexpr auto get (N3<TActual, TNum> const& n)
+    constexpr auto get (Tup3Base<TActual, TNum> const& n)
     {
         if constexpr (I == 0) return n.r;
         else if constexpr (I == 1) return n.g;
@@ -92,18 +94,23 @@ namespace color
         else static_assert("Get Index out of Range");
     }
 
-    template<class TNum = double>
+    template<class TNum = double, TNum NLimit = TNum(1)>
     struct Color3
-        : public N3<Color3<TNum>, TNum>
+        : public Tup3Base<Color3<TNum>, TNum>
     {
+        using Num = TNum;
+
         using Self = Color3<TNum>;
-        using Base = N3<Self, TNum>;
+        using Base = Tup3Base<Self, TNum>;
+
         using Base::r;
         using Base::g;
         using Base::b;
 
-        static constexpr TNum NumZero = 0;
-        static constexpr TNum NumLimit = 1; // TODO make MAX INT when an int?
+        static constexpr Num Limit = NLimit;
+
+        static constexpr Num NumZero = 0;
+        static constexpr Num NumLimit = Limit;
 
         static constexpr Self White { NumLimit, NumLimit, NumLimit };
         static constexpr Self Black { NumZero, NumZero, NumZero };
@@ -119,7 +126,7 @@ namespace color
     /* Utility Functions */
 
     // TODO ostream concept?
-    constexpr auto operator <<(std::ostream &out, N3Full auto c) -> std::ostream&
+    constexpr auto operator <<(std::ostream &out, Tup3Like auto c) -> std::ostream&
     {
         // Write the translated [0,255] value of each color component.
         constexpr double color_conv = 255.999;
@@ -129,37 +136,37 @@ namespace color
             << static_cast<int>(color_conv * c.b);
     }
 
-    template<N3Full TN3>
+    template<Tup3Like TN3>
     constexpr auto operator+(TN3 const& u, TN3 const& v)
     {
         return TN3 { u.r + v.r, u.g + v.g, u.b + v.b };
     }
 
-    template<N3Full TN3>
+    template<Tup3Like TN3>
     constexpr auto operator-(TN3 const& u, TN3 const& v)
     {
         return TN3 { u.r - v.r, u.g - v.g, u.b - v.b };
     }
     
-    template<N3Full TN3>
+    template<Tup3Like TN3>
     constexpr auto operator*(TN3 const& u, TN3 const& v)
     {
         return TN3 { u.r * v.r, u.g * v.g, u.b * v.b };
     }
 
-    template<N3Full TN3>
+    template<Tup3Like TN3>
     constexpr auto operator*(typename TN3::Num t, TN3 const& v)
     {
         return TN3 { t*v.r, t*v.g, t*v.b };
     }
 
-    template<N3Full TN3>
+    template<Tup3Like TN3>
     constexpr auto operator*(TN3 const& v, typename TN3::Num t)
     {
         return t * v;
     }
 
-    template<N3Full TN3>
+    template<Tup3Like TN3>
     constexpr auto operator/(TN3 const& v, typename TN3::Num t)
     {
         return (1/t) * v;

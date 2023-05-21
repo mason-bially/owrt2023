@@ -10,9 +10,18 @@ namespace common
     /* Concepts */
 
     template<typename T>
-    concept CN2Like = requires {
-            typename T::Num;
+    concept TupLikeBase = requires {
+        typename T::Num;
+    } and requires(T n, size_t i) {
+        { n[i] } -> std::convertible_to<typename T::Num>;
+    };
+
+    template<typename T>
+    concept Tup2Like = TupLikeBase<T>
+        and requires {
             std::tuple_size_v<T> == 2;
+            std::same_as<std::tuple_element_t<0, T>, typename T::Num>;
+            std::same_as<std::tuple_element_t<1, T>, typename T::Num>;
         } and requires(T n) {
             n.size() == 2;
             { get<0>(n) } -> std::convertible_to<typename T::Num>;
@@ -20,9 +29,12 @@ namespace common
         };
 
     template<typename T>
-    concept CN3Like = requires {
-            typename T::Num;
+    concept Tup3Like = TupLikeBase<T>
+        and requires {
             std::tuple_size_v<T> == 3;
+            std::same_as<std::tuple_element_t<0, T>, typename T::Num>;
+            std::same_as<std::tuple_element_t<1, T>, typename T::Num>;
+            std::same_as<std::tuple_element_t<2, T>, typename T::Num>;
         } and requires(T n) {
             n.size() == 3;
             { get<0>(n) } -> std::convertible_to<typename T::Num>;
@@ -31,9 +43,13 @@ namespace common
         };
 
     template<typename T>
-    concept CN4Like = requires {
-            typename T::Num;
+    concept Tup4Like = TupLikeBase<T>
+        and requires {
             std::tuple_size_v<T> == 4;
+            std::same_as<std::tuple_element_t<0, T>, typename T::Num>;
+            std::same_as<std::tuple_element_t<1, T>, typename T::Num>;
+            std::same_as<std::tuple_element_t<2, T>, typename T::Num>;
+            std::same_as<std::tuple_element_t<3, T>, typename T::Num>;
         } and requires(T n) {
             n.size() == 4;
             { get<0>(n) } -> std::convertible_to<typename T::Num>;
@@ -43,7 +59,17 @@ namespace common
         };
 
     template<typename T>
-    concept CNLike = CN2Like<T> or CN3Like<T> or CN4Like<T>;
+    concept TupLike = Tup2Like<T> or Tup3Like<T> or Tup4Like<T>;
+
+    template<typename T>
+    concept SimpleTupOps = requires(T a, T b) {
+        { a + b } -> std::convertible_to<T>;
+        { a - b } -> std::convertible_to<T>;
+    } and requires(T a, typename T::Num n) {
+        { a * n } -> std::convertible_to<T>;
+        { n * a } -> std::convertible_to<T>;
+        { a / n } -> std::convertible_to<T>;
+    };
 
 
     /* Template Helpers */
@@ -67,7 +93,7 @@ namespace common
     /* Utility Functions */
 
     // TODO ostream concept?
-    constexpr auto operator<<(std::ostream &out, CNLike auto const& n) -> std::ostream&
+    constexpr auto operator<<(std::ostream &out, TupLike auto const& n) -> std::ostream&
     {
         out << get<0>(n) << ' ' << get<1>(n);
         if constexpr (n.size() > 2)
@@ -77,13 +103,15 @@ namespace common
         return out;
     }
 
-    template<CNLike N>
+    template<TupLike N>
+        requires SimpleTupOps<N>
     constexpr auto mix(N const& a, N const& b)
     {
         return [=](typename N::Num v) { return (1-v)*a + v*b; };
     }
 
-    template<CNLike N>
+    template<TupLike N>
+        requires SimpleTupOps<N>
     constexpr auto mix(N const& a, N const& b, typename N::Num v)
     {
         return mix(a, b)(v);
