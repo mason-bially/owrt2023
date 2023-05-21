@@ -54,7 +54,7 @@ namespace vmath
 
         /* no constructors to not interfere with tuple-ification */
 
-        constexpr auto operator-() { return TActual {-x, -y, -z}; }
+        constexpr auto operator-() const { return TActual {-x, -y, -z}; }
 
         /* prefer `std::get<i>(vec)` for compile time access */
 

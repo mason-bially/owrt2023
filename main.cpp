@@ -1,5 +1,6 @@
 #include <iostream>
 #include <iomanip>
+#include <variant>
 
 #include "vmath.hpp"
 #include "color.hpp"
@@ -12,6 +13,10 @@ using vmath::Vec3;
 using vmath::Loc3;
 using vmath::Ray;
 
+template<class TNum>
+using ObjVariant = std::variant<
+    object::Sphere<TNum>
+>;
 
 template<vmath::RayLike TRay>
 auto hit_sphere(typename TRay::Loc const& center, typename TRay::Num radius, TRay const& r)
@@ -27,21 +32,22 @@ auto hit_sphere(typename TRay::Loc const& center, typename TRay::Num radius, TRa
         return (-half_b - std::sqrt(discriminant)) / a;
 }
 
-template<typename Color = Color3<double>>
-auto ray_color(vmath::RayLike auto const& r)
+template<typename Color = Color3<double>, object::Hittable World>
+auto ray_color(vmath::RayLike auto const& r, World& world)
 {
-    auto t = hit_sphere({0,0,-1}, 0.5, r);
-    if (t > 0)
-    {
-        auto N = unit_vector(r.at(t) - Vec3 {0,0,-1.0});
-        return 0.5 * Color{N.x+1, N.y+1, N.z+1};
+    using namespace common;
+
+    typename World::HitRec rec;
+    if (world.hit(r, 0, infinity, rec)) {
+        auto& n = rec.normal;
+        return 0.5 * Color{n.x+1, n.y+1, n.z+1};
     }
 
     constexpr auto color_top = Color::White;
     constexpr auto color_bot = Color{0.5, 0.7, 1.0};
 
     auto unit_direction = unit_vector(r.direction);
-    t = 0.5*(unit_direction.y + 1.0);
+    auto t = 0.5*(unit_direction.y + 1.0);
     return vmath::mix(color_top, color_bot, t);
 }
 
@@ -52,6 +58,12 @@ auto main() -> int
     constexpr auto aspect_ratio = 16.0 / 9.0;
     constexpr int image_width = 400;
     constexpr int image_height = static_cast<int>(image_width / aspect_ratio);
+
+    // World
+
+    object::HittableList<double, ObjVariant> world;
+    world.add<object::Sphere>({{0,0,-1}, 0.5});
+    world.add<object::Sphere>({{0,-100.5,-1}, 100});
 
     // Camera
 
@@ -78,7 +90,7 @@ auto main() -> int
             const auto v = double(j) / (image_height-1);
             
             vmath::Ray r { origin, lower_left_corner + u*horizontal + v*vertical - origin };
-            auto pixel_color = ray_color(r);
+            auto pixel_color = ray_color(r, world);
             
             std::cout << color_cast<Color3<uint8_t>>(pixel_color) << '\n';
         }
