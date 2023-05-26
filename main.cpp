@@ -43,7 +43,7 @@ auto ray_color(vmath::RayLike auto const& r, World& world, common::RandomState& 
     if (depth <= 0)
         return Color::Black;
 
-    if (auto hit = world.hit(r.span(0, infinity)); hit)
+    if (auto hit = world.hit(r.span(0.001, infinity)); hit)
     {
         auto target = hit->point + hit->normal + vmath::rand_in_sphere<Vec>(rs);
         return 0.5 * ray_color(Ray { hit->point, target - hit->point }, world, rs, depth-1);
