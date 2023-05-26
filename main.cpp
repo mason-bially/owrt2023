@@ -47,7 +47,7 @@ auto ray_color(vmath::RayLike auto const& r, World& world)
 
     auto unit_direction = unit_vector(r.direction);
     auto t = 0.5*(unit_direction.y + 1.0);
-    return vmath::mix(color_top, color_bot, t);
+    return mix(color_top, color_bot, t);
 }
 
 auto main() -> int
@@ -91,7 +91,7 @@ auto main() -> int
                 pixel_color += ray_color(r, world);
             }
             pixel_color *= (Num(1) / samples_per_pixel);
-            pixel_color = vmath::clamp(pixel_color, 0.0, 0.9999) * 256;
+            pixel_color = clamp(pixel_color, 0.0, 0.9999) * 256;
             std::cout << color_cast<Color3<uint8_t>>(pixel_color) << '\n';
         }
     }
