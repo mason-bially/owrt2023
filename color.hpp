@@ -18,8 +18,10 @@ TODO:
 */
 namespace color
 {
+    using common::map;
     using common::mix;
     using common::clamp;
+    using common::rand;
 
     /* Concepts */
 

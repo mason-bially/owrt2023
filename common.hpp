@@ -150,26 +150,27 @@ namespace common
     }
 
     template<TupLike TTup, typename TNum = TTup::Num>
+    constexpr auto map(TTup const& tup, std::invocable<TNum> auto f)
+    {
+        TTup res;
+        if constexpr (TTup::size() > 0) get<0>(res) = f(get<0>(tup));
+        if constexpr (TTup::size() > 1) get<1>(res) = f(get<1>(tup));
+        if constexpr (TTup::size() > 2) get<2>(res) = f(get<2>(tup));
+        if constexpr (TTup::size() > 3) get<3>(res) = f(get<3>(tup));
+        return res;
+    }
+
+    template<TupLike TTup, typename TNum = TTup::Num>
         requires SimpleTupOps<TTup>
     constexpr auto clamp(TTup const& tup, TNum min=TNum(0), TNum max=TNum(1))
     {
-        TTup res;
-        if constexpr (TTup::size() > 0) get<0>(res) = clamp(get<0>(tup), min, max);
-        if constexpr (TTup::size() > 1) get<1>(res) = clamp(get<1>(tup), min, max);
-        if constexpr (TTup::size() > 2) get<2>(res) = clamp(get<2>(tup), min, max);
-        if constexpr (TTup::size() > 3) get<3>(res) = clamp(get<3>(tup), min, max);
-        return res;
+        return map(tup, [=](auto v){ return clamp(v, min, max); });
     }
 
     template<TupLike TTup, typename TNum = TTup::Num>
         requires SimpleTupOps<TTup>
     constexpr auto rand(RandomState& rs, TNum min=TNum(0), TNum max=TNum(1))
     {
-        TTup res;
-        if constexpr (TTup::size() > 0) get<0>(res) = rand(rs, min, max);
-        if constexpr (TTup::size() > 1) get<1>(res) = rand(rs, min, max);
-        if constexpr (TTup::size() > 2) get<2>(res) = rand(rs, min, max);
-        if constexpr (TTup::size() > 3) get<3>(res) = rand(rs, min, max);
-        return res;
+        return map(TTup {}, [=,&rs](auto _){ return rand(rs, min, max); });
     }
 }

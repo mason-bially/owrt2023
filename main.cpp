@@ -99,6 +99,7 @@ auto main() -> int
                 pixel_color += ray_color(r, world, rs, max_depth);
             }
             pixel_color *= (Num(1) / samples_per_pixel);
+            pixel_color = map(pixel_color, [](auto v){ return std::sqrt(v); });
             pixel_color = clamp(pixel_color, 0.0, 0.9999) * 256;
             std::cout << color_cast<Color3<uint8_t>>(pixel_color) << '\n';
         }

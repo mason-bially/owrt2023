@@ -18,6 +18,7 @@ TODO:
 */
 namespace vmath
 {
+    using common::map;
     using common::mix;
     using common::clamp;
     using common::rand;

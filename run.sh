@@ -1,2 +1,2 @@
 
-./rt > out.ppm
+time ./rt > out.ppm
