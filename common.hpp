@@ -22,14 +22,14 @@ namespace common
 
     struct RandomState {
         std::mt19937 generator;
-
-        template<typename TNum>
-        constexpr auto num(TNum min=TNum(0), TNum max=TNum(1))
-        {
-            std::uniform_real_distribution<TNum> distribution(min, max);
-            return distribution(generator);
-        }
     };
+
+    template<typename TNum>
+    constexpr auto rand(RandomState& rs, TNum min=TNum(0), TNum max=TNum(1))
+    {
+        std::uniform_real_distribution<TNum> distribution(min, max);
+        return distribution(rs.generator);
+    }
 
     /* Concepts */
 
@@ -158,6 +158,18 @@ namespace common
         if constexpr (TTup::size() > 1) get<1>(res) = clamp(get<1>(tup), min, max);
         if constexpr (TTup::size() > 2) get<2>(res) = clamp(get<2>(tup), min, max);
         if constexpr (TTup::size() > 3) get<3>(res) = clamp(get<3>(tup), min, max);
+        return res;
+    }
+
+    template<TupLike TTup, typename TNum = TTup::Num>
+        requires SimpleTupOps<TTup>
+    constexpr auto rand(RandomState& rs, TNum min=TNum(0), TNum max=TNum(1))
+    {
+        TTup res;
+        if constexpr (TTup::size() > 0) get<0>(res) = rand(rs, min, max);
+        if constexpr (TTup::size() > 1) get<1>(res) = rand(rs, min, max);
+        if constexpr (TTup::size() > 2) get<2>(res) = rand(rs, min, max);
+        if constexpr (TTup::size() > 3) get<3>(res) = rand(rs, min, max);
         return res;
     }
 }

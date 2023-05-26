@@ -79,7 +79,7 @@ namespace color
         }
     };
     template <unsigned I, typename TActual, typename TNum>
-    constexpr auto& get (Tup3Base<TActual, TNum>& n)
+    constexpr auto& get(Tup3Base<TActual, TNum>& n)
     {
         if constexpr (I == 0) return n.r;
         else if constexpr (I == 1) return n.g;
@@ -87,7 +87,7 @@ namespace color
         else static_assert("Get Index out of Range");
     }
     template <unsigned I, typename TActual, typename TNum>
-    constexpr auto get (Tup3Base<TActual, TNum> const& n)
+    constexpr auto get(Tup3Base<TActual, TNum> const& n)
     {
         if constexpr (I == 0) return n.r;
         else if constexpr (I == 1) return n.g;

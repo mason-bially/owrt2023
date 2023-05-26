@@ -33,13 +33,20 @@ auto hit_sphere(typename TRay::Loc const& center, typename TRay::Num radius, TRa
 }
 
 template<typename Color = Color3<double>, object::Hittable World>
-auto ray_color(vmath::RayLike auto const& r, World& world)
+auto ray_color(vmath::RayLike auto const& r, World& world, common::RandomState& rs, int depth) -> Color
 {
     using namespace common;
 
-    if (auto hit = world.hit(r.span(0, infinity)); hit) {
-        auto& n = hit->normal;
-        return 0.5 * Color{n.x+1, n.y+1, n.z+1};
+    using Ray = std::remove_cvref_t<decltype(r)>;
+    using Vec = typename Ray::Vec;
+
+    if (depth <= 0)
+        return Color::Black;
+
+    if (auto hit = world.hit(r.span(0, infinity)); hit)
+    {
+        auto target = hit->point + hit->normal + vmath::rand_in_sphere<Vec>(rs);
+        return 0.5 * ray_color(Ray { hit->point, target - hit->point }, world, rs, depth-1);
     }
 
     constexpr auto color_top = Color::White;
@@ -59,6 +66,7 @@ auto main() -> int
     constexpr int image_width = 400;
     constexpr int image_height = static_cast<int>(image_width / aspect_ratio);
     constexpr int samples_per_pixel = 100;
+    constexpr int max_depth = 50;
 
     // World
 
@@ -68,7 +76,7 @@ auto main() -> int
 
     // Camera
 
-    common::RandomState rand;
+    common::RandomState rs;
     camera::SimpleCamera<Num> cam;
 
     // Render
@@ -84,11 +92,11 @@ auto main() -> int
             Color3<Num> pixel_color;
             for (int s = 0; s < samples_per_pixel; ++s)
             {
-                const auto u = Num(i + rand.num<double>()) / (image_width-1);
-                const auto v = Num(j + rand.num<double>()) / (image_height-1);
+                const auto u = Num(i + rand<double>(rs)) / (image_width-1);
+                const auto v = Num(j + rand<double>(rs)) / (image_height-1);
 
                 auto r = cam.get_ray(u, v);
-                pixel_color += ray_color(r, world);
+                pixel_color += ray_color(r, world, rs, max_depth);
             }
             pixel_color *= (Num(1) / samples_per_pixel);
             pixel_color = clamp(pixel_color, 0.0, 0.9999) * 256;

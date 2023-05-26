@@ -20,6 +20,7 @@ namespace vmath
 {
     using common::mix;
     using common::clamp;
+    using common::rand;
 
     /* Concepts */
 
@@ -95,7 +96,7 @@ namespace vmath
         constexpr auto length() const { return std::sqrt(length_squared()); }
     };
     template <unsigned I, typename TActual, typename TNum>
-    constexpr auto& get (Tup3Base<TActual, TNum>& n)
+    constexpr auto& get(Tup3Base<TActual, TNum>& n)
     {
         if constexpr (I == 0) return n.x;
         else if constexpr (I == 1) return n.y;
@@ -103,7 +104,7 @@ namespace vmath
         else static_assert("Get Index out of Range");
     }
     template <unsigned I, typename TActual, typename TNum>
-    constexpr auto get (Tup3Base<TActual, TNum> const& n)
+    constexpr auto get(Tup3Base<TActual, TNum> const& n)
     {
         if constexpr (I == 0) return n.x;
         else if constexpr (I == 1) return n.y;
@@ -207,6 +208,16 @@ namespace vmath
     }
 
     constexpr auto unit_vector(Tup3Like auto const& v) { return affine(v) / v.length(); }
+
+    template<Tup3Like TN3>
+    constexpr auto rand_in_sphere(common::RandomState& rs) {
+        using Num = typename TN3::Num;
+        while (true) {
+            auto p = rand<TN3>(rs, Num(-1), Num(1));
+            if (p.length_squared() >= 1) continue;
+            return p;
+        }
+    }
 }
 
 template <typename TNum>
