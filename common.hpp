@@ -3,19 +3,30 @@
 #include <tuple>
 #include <stdexcept>
 #include <cmath>
+#include <random>
 #include <iostream>
 
 namespace common
 {
     // Constants
 
-    const double infinity = std::numeric_limits<double>::infinity();
-    const double pi = 3.1415926535897932385;
+    constexpr double infinity = std::numeric_limits<double>::infinity();
+    constexpr double pi = 3.1415926535897932385;
 
     // Utility Functions
 
-    inline double degrees_to_radians(double degrees) {
+    constexpr double degrees_to_radians(double degrees) {
         return degrees * pi / 180.0;
+    }
+
+    struct RandomState {
+        std::mt19937 generator;
+    };
+
+    template<typename T>
+    inline double random_double(auto rs, T min, T max) {
+        std::uniform_real_distribution<T> distribution(min, max);
+        return distribution(rs.generator);
     }
 
     /* Concepts */
