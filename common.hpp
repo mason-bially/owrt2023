@@ -15,19 +15,21 @@ namespace common
 
     // Utility Functions
 
-    constexpr double degrees_to_radians(double degrees) {
-        return degrees * pi / 180.0;
+    template<typename TNum>
+    constexpr auto degrees_to_radians(TNum degrees) {
+        return TNum(degrees * pi / 180.0);
     }
 
     struct RandomState {
         std::mt19937 generator;
-    };
 
-    template<typename T>
-    inline double random_double(auto rs, T min, T max) {
-        std::uniform_real_distribution<T> distribution(min, max);
-        return distribution(rs.generator);
-    }
+        template<typename TNum>
+        constexpr auto num(TNum min=TNum(0), TNum max=TNum(1))
+        {
+            std::uniform_real_distribution<TNum> distribution(min, max);
+            return distribution(generator);
+        }
+    };
 
     /* Concepts */
 
@@ -125,17 +127,37 @@ namespace common
         return out;
     }
 
-    template<TupLike N>
-        requires SimpleTupOps<N>
-    constexpr auto mix(N const& a, N const& b)
+    template<TupLike TTup>
+        requires SimpleTupOps<TTup>
+    constexpr auto mix(TTup const& a, TTup const& b)
     {
-        return [=](typename N::Num v) { return (1-v)*a + v*b; };
+        return [=](typename TTup::Num v) { return (1-v)*a + v*b; };
     }
 
-    template<TupLike N>
-        requires SimpleTupOps<N>
-    constexpr auto mix(N const& a, N const& b, typename N::Num v)
+    template<TupLike TTup>
+        requires SimpleTupOps<TTup>
+    constexpr auto mix(TTup const& a, TTup const& b, typename TTup::Num v)
     {
         return mix(a, b)(v);
+    }
+
+    template<typename TNum>
+    constexpr auto clamp(TNum x, TNum min=TNum(0), TNum max=TNum(1))
+    {
+        if (x < min) return min;
+        if (x > max) return max;
+        return x;
+    }
+
+    template<TupLike TTup, typename TNum = TTup::Num>
+        requires SimpleTupOps<TTup>
+    constexpr auto clamp(TTup const& tup, TNum min=TNum(0), TNum max=TNum(1))
+    {
+        TTup res;
+        if constexpr (TTup::size() > 0) get<0>(res) = clamp(get<0>(tup), min, max);
+        if constexpr (TTup::size() > 1) get<1>(res) = clamp(get<1>(tup), min, max);
+        if constexpr (TTup::size() > 2) get<2>(res) = clamp(get<2>(tup), min, max);
+        if constexpr (TTup::size() > 3) get<3>(res) = clamp(get<3>(tup), min, max);
+        return res;
     }
 }

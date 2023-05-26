@@ -18,7 +18,8 @@ TODO:
 */
 namespace color
 {
-    using namespace common;
+    using common::mix;
+    using common::clamp;
 
     /* Concepts */
 
@@ -78,7 +79,7 @@ namespace color
         }
     };
     template <unsigned I, typename TActual, typename TNum>
-    constexpr auto get (Tup3Base<TActual, TNum>& n)
+    constexpr auto& get (Tup3Base<TActual, TNum>& n)
     {
         if constexpr (I == 0) return n.r;
         else if constexpr (I == 1) return n.g;
@@ -136,18 +137,11 @@ namespace color
     template<Tup3Like TDst, Tup3Like TSrc>
     constexpr auto color_cast(TSrc src) -> TDst
     {
-        if constexpr (TDst::NumLimit != 1.0)
-        {
-            constexpr double color_conv = TDst::NumLimit + 0.99999;
-            return TDst {
-                static_cast<typename TDst::Num>(src.r * color_conv),
-                static_cast<typename TDst::Num>(src.g * color_conv),
-                static_cast<typename TDst::Num>(src.b * color_conv)
-            };
-        }
-        else
-            static_assert(TDst::NumLimit == 1.0,
-                "Can only color cast to integral types.");
+        return TDst {
+            static_cast<typename TDst::Num>(src.r),
+            static_cast<typename TDst::Num>(src.g),
+            static_cast<typename TDst::Num>(src.b)
+        };
     }
 
     template<Tup3Like TN3>

@@ -18,7 +18,8 @@ TODO:
 */
 namespace vmath
 {
-    using namespace common;
+    using common::mix;
+    using common::clamp;
 
     /* Concepts */
 
@@ -35,7 +36,7 @@ namespace vmath
 
     template<typename T>
     concept Tup3Like = Tup3LikePart0<T> and requires(T n) {
-            { affine(n) } -> Tup3Like;
+            { affine(n) } -> common::Tup3Like;
     };
 
     template<typename T> concept Tup3Affine = Tup3Like<T> and IsAffine<T>;
@@ -94,7 +95,7 @@ namespace vmath
         constexpr auto length() const { return std::sqrt(length_squared()); }
     };
     template <unsigned I, typename TActual, typename TNum>
-    constexpr auto get (Tup3Base<TActual, TNum>& n)
+    constexpr auto& get (Tup3Base<TActual, TNum>& n)
     {
         if constexpr (I == 0) return n.x;
         else if constexpr (I == 1) return n.y;
@@ -122,7 +123,7 @@ namespace vmath
 
         static constexpr auto IsAffineSpace() { return true; }
     };
-    template<class NX, class NY, class NZ> Vec3 (NX, NY, NZ) -> Vec3<numeric_promote_t<NX, NY, NZ>>;
+    template<class NX, class NY, class NZ> Vec3 (NX, NY, NZ) -> Vec3<common::numeric_promote_t<NX, NY, NZ>>;
     template<class Num> constexpr auto affine (Vec3<Num> n) { return n; }
 
 
@@ -142,7 +143,7 @@ namespace vmath
 
         constexpr explicit operator Vec3<Num>() { return Vec3 { x, y, z }; }
     };
-    template<class NX, class NY, class NZ> Loc3 (NX, NY, NZ) -> Loc3<numeric_promote_t<NX, NY, NZ>>;
+    template<class NX, class NY, class NZ> Loc3 (NX, NY, NZ) -> Loc3<common::numeric_promote_t<NX, NY, NZ>>;
     template<class Num> constexpr auto affine (Loc3<Num> n) { return (Vec3<Num>) n; }
 
     /* Utility Functions */

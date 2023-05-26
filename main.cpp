@@ -2,11 +2,11 @@
 #include <iomanip>
 #include <variant>
 
-#include "vmath.hpp"
-#include "color.hpp"
+#include "owrt.hpp"
 
-#include "ray.hpp"
 #include "sphere.hpp"
+
+#include "camera.hpp"
 
 using color::Color3;
 using vmath::Vec3;
@@ -53,27 +53,23 @@ auto ray_color(vmath::RayLike auto const& r, World& world)
 auto main() -> int
 {
     // Image
+    using Num = double;
 
     constexpr auto aspect_ratio = 16.0 / 9.0;
     constexpr int image_width = 400;
     constexpr int image_height = static_cast<int>(image_width / aspect_ratio);
+    constexpr int samples_per_pixel = 100;
 
     // World
 
-    object::HittableList<double, ObjVariant> world;
+    object::HittableList<Num, ObjVariant> world;
     world.add<object::Sphere>({{0,0,-1}, 0.5});
     world.add<object::Sphere>({{0,-100.5,-1}, 100});
 
     // Camera
 
-    auto viewport_height = 2.0;
-    auto viewport_width = aspect_ratio * viewport_height;
-    auto focal_length = 1.0;
-
-    auto origin = Loc3<double>::Origin;
-    Vec3 horizontal { viewport_width, 0, 0 };
-    Vec3 vertical { 0, viewport_height, 0 };
-    auto lower_left_corner = origin - horizontal/2 - vertical/2 - Vec3{0, 0, focal_length};
+    common::RandomState rand;
+    camera::SimpleCamera<Num> cam;
 
     // Render
 
@@ -85,12 +81,17 @@ auto main() -> int
             << std::flush;
         for (auto i = 0; i < image_width; ++i)
         {
-            const auto u = double(i) / (image_width-1);
-            const auto v = double(j) / (image_height-1);
-            
-            vmath::Ray r { origin, lower_left_corner + u*horizontal + v*vertical - origin };
-            auto pixel_color = ray_color(r, world);
-            
+            Color3<Num> pixel_color;
+            for (int s = 0; s < samples_per_pixel; ++s)
+            {
+                const auto u = Num(i + rand.num<double>()) / (image_width-1);
+                const auto v = Num(j + rand.num<double>()) / (image_height-1);
+
+                auto r = cam.get_ray(u, v);
+                pixel_color += ray_color(r, world);
+            }
+            pixel_color *= (Num(1) / samples_per_pixel);
+            pixel_color = vmath::clamp(pixel_color, 0.0, 0.9999) * 256;
             std::cout << color_cast<Color3<uint8_t>>(pixel_color) << '\n';
         }
     }
