@@ -12,10 +12,12 @@ namespace object
             using Num = typename World::Num;
             using Loc = typename World::Loc;
             using Ray = typename World::Ray;
+            using MatVar = typename World::MatVar;
             using HitRec = HitRecord<World>;
 
             Loc center;
             Num radius;
+            MatVar material;
 
             constexpr auto hit(vmath::RaySegLike auto seg) const -> std::optional<HitRec>
             {
@@ -43,6 +45,7 @@ namespace object
                 rec.point = r.at(rec.t);
                 auto outward_normal = (rec.point - center) / radius;
                 rec.set_face_normal(r, outward_normal);
+                rec.material = &material;
 
                 return rec;
             }

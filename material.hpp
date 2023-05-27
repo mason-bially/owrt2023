@@ -20,7 +20,7 @@ namespace material
 
     template<typename T, typename TWorld=T::World>
     concept Material = WorldLike<TWorld> and std::same_as<TWorld, typename T::World>
-        and requires (T m, typename TWorld::Ray const ray_in, object::HitRecord<TWorld> const rec) {
+        and requires (T const m, typename TWorld::Ray const ray_in, object::HitRecord<TWorld> const rec) {
             { m.scatter(ray_in, rec) } -> std::convertible_to<std::optional<ScatterResult<TWorld>>>;
         };
 
@@ -38,7 +38,7 @@ namespace material
         using Scatter = ScatterResult<World>;
         using Ray = typename TWorld::Ray;
 
-        constexpr auto scatter(Ray const& in, auto const& hit_rec) -> std::optional<Scatter> {
+        constexpr auto scatter(Ray const& in, auto const& hit_rec) const -> std::optional<Scatter> {
             return {};
         }
     };

@@ -20,7 +20,7 @@ namespace object
 
         Loc point;
         Vec normal;
-        MatVar material;
+        MatVar const* material = nullptr;
         Num t;
         bool front_face;
 
