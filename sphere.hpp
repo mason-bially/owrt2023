@@ -4,14 +4,15 @@
 
 namespace object
 {
-    template<typename TNum>
+    template<typename TWorld>
     class Sphere
     {
         public:
-            using Num = TNum;
-            using Loc = vmath::Loc3<Num>;
-            using Ray = vmath::Ray<Num>;
-            using HitRec = HitRecord<Num>;
+            using World = TWorld;
+            using Num = typename World::Num;
+            using Loc = typename World::Loc;
+            using Ray = typename World::Ray;
+            using HitRec = HitRecord<World>;
 
             Loc center;
             Num radius;

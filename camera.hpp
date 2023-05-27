@@ -12,21 +12,21 @@ namespace camera
         { c.get_ray(u, v) } -> std::convertible_to<vmath::Ray<TNum>>;
     };
 
-    template<typename TNum>
+    template<dispatch::WorldLike TWorld>
     class SimpleCamera
     {
         public:
-            using Num = TNum;
-            using Loc3 = vmath::Loc3<Num>;
-            using Vec3 = vmath::Vec3<Num>;
-            using Ray = vmath::Ray<Num>;
-            using HitRec = object::HitRecord<Num>;
+            using Num = typename TWorld::Num;
+            using Loc = typename TWorld::Loc;
+            using Vec = typename TWorld::Vec;
+            using Ray = typename TWorld::Ray;
+            using HitRec = object::HitRecord<TWorld>;
 
         private:
-            Loc3 _origin;
-            Loc3 _cornerLowerLeft;
-            Vec3 _horizontal;
-            Vec3 _vertical;
+            Loc _origin;
+            Loc _cornerLowerLeft;
+            Vec _horizontal;
+            Vec _vertical;
 
         public:
             SimpleCamera()
@@ -36,14 +36,14 @@ namespace camera
                 auto viewport_width = aspect_ratio * viewport_height;
                 auto focal_length = 1.0;
 
-                _origin = Loc3 { 0, 0, 0 };
-                _horizontal = Vec3 { viewport_width, 0.0, 0.0 };
-                _vertical = Vec3 { 0.0, viewport_height, 0.0 };
-                _cornerLowerLeft = _origin - _horizontal/TNum(2) - _vertical/TNum(2) - Vec3 { 0, 0, focal_length };
+                _origin = Loc{0, 0, 0};
+                _horizontal = Vec{viewport_width, 0.0, 0.0};
+                _vertical = Vec{0.0, viewport_height, 0.0};
+                _cornerLowerLeft = _origin - _horizontal/Num(2) - _vertical/Num(2) - Vec{0, 0, focal_length};
             }
 
-            Ray get_ray(TNum u, TNum v) const {
-                return Ray { _origin, _cornerLowerLeft + u*_horizontal + v*_vertical - _origin };
+            Ray get_ray(Num u, Num v) const {
+                return Ray{_origin, _cornerLowerLeft + u*_horizontal + v*_vertical - _origin};
             }
     };
 }

@@ -13,9 +13,14 @@ using vmath::Vec3;
 using vmath::Loc3;
 using vmath::Ray;
 
-template<class TNum>
-using ObjVariant = std::variant<
-    object::Sphere<TNum>
+template<dispatch::WorldLike TWorld>
+using MatDispatch = material::MaterialDispatch<
+    material::AlwaysAbsorb<TWorld>
+>;
+
+template<dispatch::WorldLike TWorld>
+using ObjDispatch = object::HittableDispatch<
+    object::Sphere<TWorld>
 >;
 
 template<vmath::RayLike TRay>
@@ -56,9 +61,17 @@ auto ray_color(Ray const& r, object::Hittable auto& world, std::invocable<typena
 
 auto main() -> int
 {
-    // Image
+    // Types
     using Num = double;
-    using Vec3 = vmath::Vec3<Num>;
+    using ColorNum = double;
+
+    using World = dispatch::World<
+        Num, ColorNum,
+        MatDispatch, ObjDispatch>;
+
+    using Vec = typename World::Vec;
+
+    // Image
 
     constexpr auto aspect_ratio = 16.0 / 9.0;
     constexpr int image_width = 400;
@@ -69,20 +82,20 @@ auto main() -> int
     // Samplers
 
     common::RandomState rs;
-    auto sample_sphere = [&](Vec3 normal) { return normal + vmath::rand_in_sphere<Vec3>(rs); };
-    auto sample_unit_vector = [&](Vec3 normal) { return normal + vmath::rand_unit_vector<Vec3>(rs); };
-    auto sample_hemisphere = [&](Vec3 normal) { return vmath::rand_in_hemisphere<Vec3>(normal, rs); };
+    auto sample_sphere = [&](Vec normal) { return normal + vmath::rand_in_sphere<Vec>(rs); };
+    auto sample_unit_vector = [&](Vec normal) { return normal + vmath::rand_unit_vector<Vec>(rs); };
+    auto sample_hemisphere = [&](Vec normal) { return vmath::rand_in_hemisphere<Vec>(normal, rs); };
     auto& sampler = sample_hemisphere;
 
     // World
 
-    object::HittableList<Num, ObjVariant> world;
+    object::HittableList<World> world;
     world.add<object::Sphere>({{0,0,-1}, 0.5});
     world.add<object::Sphere>({{0,-100.5,-1}, 100});
 
     // Camera
 
-    camera::SimpleCamera<Num> cam;
+    camera::SimpleCamera<World> cam;
 
     // Render
 

@@ -7,15 +7,20 @@
 
 namespace object
 {
-    template<typename TNum>
+    using namespace dispatch;
+
+    template<WorldLike TWorld>
     struct HitRecord
     {
-        using Num = TNum;
-        using Loc = vmath::Loc3<Num>;
-        using Vec = vmath::Vec3<Num>;
+        using World = TWorld;
+        using Num = typename World::Num;
+        using Loc = typename World::Loc;
+        using Vec = typename World::Vec;
+        using MatVar = typename World::MatVar;
 
         Loc point;
         Vec normal;
+        MatVar material;
         Num t;
         bool front_face;
 
@@ -26,28 +31,32 @@ namespace object
         }
     };
 
-    template<typename T, class TNum=T::Num>
-    concept Hittable = requires {
-        typename T::Num;
-        requires std::same_as<typename T::Num, TNum>;
-    } and requires (T h, vmath::RaySegment<TNum> seg) {
-        { h.hit(seg) } -> std::convertible_to<std::optional<HitRecord<TNum>>>;
+    template<typename T, typename TWorld=T::World>
+    concept Hittable = WorldLike<TWorld> and std::same_as<TWorld, typename T::World>
+        and requires (T h, vmath::RaySegment<typename TWorld::Num> seg) {
+            { h.hit(seg) } -> std::convertible_to<std::optional<HitRecord<TWorld>>>;
+        };
+
+    template<Hittable... TVariants>
+    struct HittableDispatch
+        : public DispatchGroup<TVariants...> {
+        
     };
 
-    template<class TNum, template<class> typename THittableVariant>
+    template<WorldLike TWorld>
     struct HittableList
     {
-        using Num = TNum;
-        using HittableVariant = THittableVariant<TNum>;
-        using Ray = vmath::Ray<TNum>;
-        using HitRec = HitRecord<TNum>;
+        using World = TWorld;
+        using ObjVar = typename TWorld::ObjVar;
+        using Ray = typename TWorld::Ray;
+        using HitRec = HitRecord<TWorld>;
 
-        std::vector<HittableVariant> objects;
+        std::vector<ObjVar> objects;
 
         template<template<class> typename THittable>
-        constexpr void add(THittable<Num>&& hittable)
+        constexpr void add(THittable<TWorld>&& hittable)
         {
-            objects.emplace_back(std::forward<THittable<Num>&&>(hittable));
+            objects.emplace_back(std::forward<THittable<TWorld>&&>(hittable));
         }
 
         constexpr auto hit(vmath::RaySegLike auto seg) const
