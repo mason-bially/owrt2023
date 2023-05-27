@@ -5,3 +5,4 @@
 #include "color.hpp"
 #include "ray.hpp"
 #include "hittable.hpp"
+#include "material.hpp"

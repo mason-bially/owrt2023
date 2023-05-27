@@ -7,7 +7,7 @@ namespace camera
     template<typename T, class TNum=T::Num>
     concept Camera = requires {
         typename T::Num;
-        std::same_as<typename T::Num, TNum>;
+        requires std::same_as<typename T::Num, TNum>;
     } and requires (T c, TNum u, TNum v) {
         { c.get_ray(u, v) } -> std::convertible_to<vmath::Ray<TNum>>;
     };

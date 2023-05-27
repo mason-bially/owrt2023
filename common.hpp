@@ -43,9 +43,9 @@ namespace common
     template<typename T>
     concept Tup2Like = TupLikeBase<T>
         and requires {
-            std::tuple_size_v<T> == 2;
-            std::same_as<std::tuple_element_t<0, T>, typename T::Num>;
-            std::same_as<std::tuple_element_t<1, T>, typename T::Num>;
+            requires std::tuple_size_v<T> == 2;
+            requires std::same_as<std::tuple_element_t<0, T>, typename T::Num>;
+            requires std::same_as<std::tuple_element_t<1, T>, typename T::Num>;
         } and requires(T n) {
             n.size() == 2;
             { get<0>(n) } -> std::convertible_to<typename T::Num>;
@@ -55,10 +55,10 @@ namespace common
     template<typename T>
     concept Tup3Like = TupLikeBase<T>
         and requires {
-            std::tuple_size_v<T> == 3;
-            std::same_as<std::tuple_element_t<0, T>, typename T::Num>;
-            std::same_as<std::tuple_element_t<1, T>, typename T::Num>;
-            std::same_as<std::tuple_element_t<2, T>, typename T::Num>;
+            requires std::tuple_size_v<T> == 3;
+            requires std::same_as<std::tuple_element_t<0, T>, typename T::Num>;
+            requires std::same_as<std::tuple_element_t<1, T>, typename T::Num>;
+            requires std::same_as<std::tuple_element_t<2, T>, typename T::Num>;
         } and requires(T n) {
             n.size() == 3;
             { get<0>(n) } -> std::convertible_to<typename T::Num>;
@@ -69,11 +69,11 @@ namespace common
     template<typename T>
     concept Tup4Like = TupLikeBase<T>
         and requires {
-            std::tuple_size_v<T> == 4;
-            std::same_as<std::tuple_element_t<0, T>, typename T::Num>;
-            std::same_as<std::tuple_element_t<1, T>, typename T::Num>;
-            std::same_as<std::tuple_element_t<2, T>, typename T::Num>;
-            std::same_as<std::tuple_element_t<3, T>, typename T::Num>;
+            requires std::tuple_size_v<T> == 4;
+            requires std::same_as<std::tuple_element_t<0, T>, typename T::Num>;
+            requires std::same_as<std::tuple_element_t<1, T>, typename T::Num>;
+            requires std::same_as<std::tuple_element_t<2, T>, typename T::Num>;
+            requires std::same_as<std::tuple_element_t<3, T>, typename T::Num>;
         } and requires(T n) {
             n.size() == 4;
             { get<0>(n) } -> std::convertible_to<typename T::Num>;

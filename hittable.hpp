@@ -29,7 +29,7 @@ namespace object
     template<typename T, class TNum=T::Num>
     concept Hittable = requires {
         typename T::Num;
-        std::same_as<typename T::Num, TNum>;
+        requires std::same_as<typename T::Num, TNum>;
     } and requires (T h, vmath::RaySegment<TNum> seg) {
         { h.hit(seg) } -> std::convertible_to<std::optional<HitRecord<TNum>>>;
     };
