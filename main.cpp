@@ -15,7 +15,7 @@ using vmath::Ray;
 
 template<dispatch::WorldLike TWorld>
 using MatDispatch = material::MaterialDispatch<
-    material::AlwaysAbsorb<TWorld>
+    material::Lambertian<TWorld>
 >;
 
 template<dispatch::WorldLike TWorld>
