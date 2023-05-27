@@ -80,10 +80,19 @@ auto main() -> int
     auto& sampler = sample_hemisphere;
 
     // World
+    using Lambertian = material::Lambertian<World>;
+    using Metal = material::Metal<World>;
+
+    auto material_ground = Lambertian{{0.8, 0.8, 0.0}};
+    auto material_center = Lambertian{{0.7, 0.3, 0.3}};
+    auto material_left   = Metal{{0.8, 0.8, 0.8}};
+    auto material_right  = Metal{{0.8, 0.6, 0.2}};
 
     object::HittableList<World> world;
-    world.add<object::Sphere>({{0,0,-1}, 0.5});
-    world.add<object::Sphere>({{0,-100.5,-1}, 100});
+    world.add<object::Sphere>({{ 0,-100.5,-1}, 100, material_ground});
+    world.add<object::Sphere>({{ 0, 0,-1}, 0.5, material_center});
+    world.add<object::Sphere>({{-1, 0,-1}, 0.5, material_left});
+    world.add<object::Sphere>({{ 1, 0,-1}, 0.5, material_right});
 
     // Camera
 
