@@ -219,6 +219,11 @@ namespace vmath
             return p;
         }
     }
+
+    template<Tup3Like TN3>
+    constexpr auto rand_unit_vector(common::RandomState& rs) {
+        return unit_vector(rand_in_sphere<TN3>(rs));
+    }
 }
 
 template <typename TNum>
