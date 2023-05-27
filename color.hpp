@@ -22,6 +22,7 @@ namespace color
     using common::mix;
     using common::clamp;
     using common::rand;
+    using common::near_zero;
 
     /* Concepts */
 

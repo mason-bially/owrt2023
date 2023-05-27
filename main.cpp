@@ -15,27 +15,15 @@ using vmath::Ray;
 
 template<dispatch::WorldLike TWorld>
 using MatDispatch = material::MaterialDispatch<
-    material::Lambertian<TWorld>
+    material::Absorb<TWorld>,
+    material::Lambertian<TWorld>,
+    material::Metal<TWorld>
 >;
 
 template<dispatch::WorldLike TWorld>
 using ObjDispatch = object::HittableDispatch<
     object::Sphere<TWorld>
 >;
-
-template<vmath::RayLike TRay>
-auto hit_sphere(typename TRay::Loc const& center, typename TRay::Num radius, TRay const& r)
-{
-    auto oc = r.origin - center;
-    auto a = r.direction.length_squared();
-    auto half_b = dot(oc, r.direction);
-    auto c = oc.length_squared() - radius*radius;
-    auto discriminant = half_b*half_b - a*c;
-    if (discriminant < 0)
-        return -1.0;
-    else
-        return (-half_b - std::sqrt(discriminant)) / a;
-}
 
 template<typename Color = Color3<double>, vmath::RayLike Ray>
 auto ray_color(Ray const& r, object::Hittable auto& world, std::invocable<typename Ray::Vec> auto& sampler, int depth) -> Color
@@ -47,8 +35,12 @@ auto ray_color(Ray const& r, object::Hittable auto& world, std::invocable<typena
 
     if (auto hit = world.hit(r.span(0.001, infinity)); hit)
     {
-        auto target = hit->point + sampler(hit->normal);
-        return 0.5 * ray_color(Ray { hit->point, target - hit->point }, world, sampler, depth-1);
+        auto scatter_dispatch = [&](auto&& m) { return m.scatter(r, *hit, sampler); };
+        if (auto scatter = std::visit(scatter_dispatch, *hit->material); scatter)
+        {
+            return scatter->attenuation * ray_color(scatter->scattered, world, sampler, depth-1);
+        }
+        return Color::Black;
     }
 
     constexpr auto color_top = Color::White;

@@ -179,7 +179,7 @@ namespace common
     {
         // Return true if the vector is close to zero in all dimensions.
         constexpr auto s = TNum(1e-8);
-        bool res;
+        bool res = true;
         if constexpr (TTup::size() > 0) res = res && fabs(get<0>(tup)) < s;
         if constexpr (TTup::size() > 1) res = res && fabs(get<1>(tup)) < s;
         if constexpr (TTup::size() > 2) res = res && fabs(get<2>(tup)) < s;

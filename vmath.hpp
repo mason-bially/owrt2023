@@ -22,6 +22,7 @@ namespace vmath
     using common::mix;
     using common::clamp;
     using common::rand;
+    using common::near_zero;
 
     /* Concepts */
 
@@ -209,6 +210,11 @@ namespace vmath
     }
 
     constexpr auto unit_vector(Tup3Like auto const& v) { return affine(v) / v.length(); }
+
+    template<Tup3Affine TN3>
+    constexpr auto reflect(TN3 const& v, TN3 const& n) {
+        return v - 2*dot(v,n)*n;
+    }
 
     template<Tup3Like TN3>
     constexpr auto rand_in_sphere(common::RandomState& rs) {

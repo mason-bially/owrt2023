@@ -35,7 +35,7 @@ namespace material
     };
 
     template<WorldLike TWorld>
-    struct AlwaysAbsorb
+    struct Absorb
     {
         using World = TWorld;
         using Vec = typename TWorld::Vec;
@@ -66,6 +66,29 @@ namespace material
                 Ray{hit_rec.point, scatter_dir},
                 albedo
             };
+        }
+    };
+
+    template<WorldLike TWorld>
+    struct Metal
+    {
+        using World = TWorld;
+        using Vec = typename TWorld::Vec;
+        using Ray = typename TWorld::Ray;
+        using Color = typename TWorld::Color;
+        using Scatter = ScatterResult<World>;
+
+        Color albedo;
+
+        constexpr auto scatter(Ray const& in, auto const& hit_rec, std::invocable<Vec> auto& sampler) const -> std::optional<Scatter> {
+            auto reflected = reflect(unit_vector(in.direction), hit_rec.normal);
+            if (dot(reflected, hit_rec.normal) > 0)
+                return Scatter {
+                    Ray{hit_rec.point, reflected},
+                    albedo
+                };
+            else
+                return std::nullopt;
         }
     };
 }
