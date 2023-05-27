@@ -32,21 +32,18 @@ auto hit_sphere(typename TRay::Loc const& center, typename TRay::Num radius, TRa
         return (-half_b - std::sqrt(discriminant)) / a;
 }
 
-template<typename Color = Color3<double>, object::Hittable World>
-auto ray_color(vmath::RayLike auto const& r, World& world, common::RandomState& rs, int depth) -> Color
+template<typename Color = Color3<double>, vmath::RayLike Ray>
+auto ray_color(Ray const& r, object::Hittable auto& world, std::invocable<typename Ray::Vec> auto& sampler, int depth) -> Color
 {
     using namespace common;
-
-    using Ray = std::remove_cvref_t<decltype(r)>;
-    using Vec = typename Ray::Vec;
 
     if (depth <= 0)
         return Color::Black;
 
     if (auto hit = world.hit(r.span(0.001, infinity)); hit)
     {
-        auto target = hit->point + hit->normal + vmath::rand_unit_vector<Vec>(rs);
-        return 0.5 * ray_color(Ray { hit->point, target - hit->point }, world, rs, depth-1);
+        auto target = hit->point + sampler(hit->normal);
+        return 0.5 * ray_color(Ray { hit->point, target - hit->point }, world, sampler, depth-1);
     }
 
     constexpr auto color_top = Color::White;
@@ -61,12 +58,21 @@ auto main() -> int
 {
     // Image
     using Num = double;
+    using Vec3 = vmath::Vec3<Num>;
 
     constexpr auto aspect_ratio = 16.0 / 9.0;
     constexpr int image_width = 400;
     constexpr int image_height = static_cast<int>(image_width / aspect_ratio);
     constexpr int samples_per_pixel = 100;
     constexpr int max_depth = 50;
+
+    // Samplers
+
+    common::RandomState rs;
+    auto sample_sphere = [&](Vec3 normal) { return normal + vmath::rand_in_sphere<Vec3>(rs); };
+    auto sample_unit_vector = [&](Vec3 normal) { return normal + vmath::rand_unit_vector<Vec3>(rs); };
+    auto sample_hemisphere = [&](Vec3 normal) { return vmath::rand_in_hemisphere<Vec3>(normal, rs); };
+    auto& sampler = sample_hemisphere;
 
     // World
 
@@ -76,7 +82,6 @@ auto main() -> int
 
     // Camera
 
-    common::RandomState rs;
     camera::SimpleCamera<Num> cam;
 
     // Render
@@ -96,7 +101,7 @@ auto main() -> int
                 const auto v = Num(j + rand<double>(rs)) / (image_height-1);
 
                 auto r = cam.get_ray(u, v);
-                pixel_color += ray_color(r, world, rs, max_depth);
+                pixel_color += ray_color(r, world, sampler, max_depth);
             }
             pixel_color *= (Num(1) / samples_per_pixel);
             pixel_color = map(pixel_color, [](auto v){ return std::sqrt(v); });

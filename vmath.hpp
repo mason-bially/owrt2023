@@ -224,6 +224,15 @@ namespace vmath
     constexpr auto rand_unit_vector(common::RandomState& rs) {
         return unit_vector(rand_in_sphere<TN3>(rs));
     }
+
+    template<Tup3Like TN3>
+    constexpr auto rand_in_hemisphere(TN3 const& normal, common::RandomState& rs) {
+        auto in_sphere = rand_in_sphere<TN3>(rs);
+        if (dot(in_sphere, normal) > 0.0) // In the same hemisphere as the normal
+            return in_sphere;
+        else
+            return -in_sphere;
+    }
 }
 
 template <typename TNum>
