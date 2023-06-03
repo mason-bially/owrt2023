@@ -99,9 +99,10 @@ auto main() -> int
 
     object::HittableList<World> world;
     world.add<object::Sphere>({{ 0,-100.5,-1}, 100, material_ground});
-    world.add<object::Sphere>({{ 0, 0,-1}, 0.5, material_center});
-    world.add<object::Sphere>({{-1, 0,-1}, 0.5, material_left});
-    world.add<object::Sphere>({{ 1, 0,-1}, 0.5, material_right});
+    world.add<object::Sphere>({{ 0, 0,-1},  0.5, material_center});
+    world.add<object::Sphere>({{-1, 0,-1},  0.5, material_left});
+    world.add<object::Sphere>({{-1, 0,-1}, -0.4, material_left});
+    world.add<object::Sphere>({{ 1, 0,-1},  0.5, material_right});
 
     // Camera
 
