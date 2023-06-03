@@ -116,7 +116,7 @@ namespace material
 
             bool cannot_refract = refraction_ratio * sin_theta > 1.0;
             Vec direction;
-            if (cannot_refract)
+            if (cannot_refract || reflectance(cos_theta, refraction_ratio) > rand<Num>(rs))
                 direction = reflect(unit_direction, hit_rec.normal);
             else
                 direction = refract(unit_direction, hit_rec.normal, refraction_ratio);
@@ -125,6 +125,14 @@ namespace material
                 Ray{hit_rec.point, direction},
                attenuation
             };
+        }
+
+    private:
+        static Num reflectance(Num cosine, Num ref_idx) {
+            // Use Schlick's approximation for reflectance.
+            auto r0 = (1-ref_idx) / (1+ref_idx);
+            r0 = r0*r0;
+            return r0 + (1-r0)*std::pow((1 - cosine),5);
         }
     };
 }
