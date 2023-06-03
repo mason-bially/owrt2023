@@ -12,7 +12,8 @@ namespace dispatch
     };
 
     template<typename... TVariants>
-    struct DispatchGroup {
+    struct DispatchGroup
+    {
         using Variant = std::variant<TVariants...>;
     };
 
@@ -30,11 +31,10 @@ namespace dispatch
 
     template<
         class TNum,
-        class TColorNum,
-        template<class> typename TMatDispatch,
-        template<class> typename TObjDispatch>
-    struct World {
-        using Self = World<TNum, TColorNum, TMatDispatch, TObjDispatch>;
+        class TColorNum>
+    struct WorldBase
+    {
+        using Self = WorldBase<TNum, TColorNum>;
 
         using Num = TNum;
         using ColorNum = TColorNum;
@@ -44,6 +44,21 @@ namespace dispatch
         using Color = color::Color3<ColorNum>;
 
         using Ray = vmath::Ray<Num>;
+    };
+
+    template<
+        class TNum,
+        class TColorNum,
+        template<class> typename TConfig,
+        template<class> typename TMatDispatch,
+        template<class> typename TObjDispatch>
+    struct World 
+        : public WorldBase<TNum, TColorNum> 
+    {
+        using SelfBase = WorldBase<TNum, TColorNum>;
+        using Self = World<TNum, TColorNum, TConfig, TMatDispatch, TObjDispatch>;
+
+        using Config = TConfig<SelfBase>;
 
         using MatDispatch = TMatDispatch<Self>;
         using MatVar = MatDispatch::Variant;
