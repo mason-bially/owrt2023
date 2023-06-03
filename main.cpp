@@ -17,7 +17,8 @@ template<dispatch::WorldLike TWorld>
 using MatDispatch = material::MaterialDispatch<
     material::Absorb<TWorld>,
     material::Lambertian<TWorld>,
-    material::Metal<TWorld>
+    material::Metal<TWorld>,
+    material::Dielectric<TWorld>
 >;
 
 template<dispatch::WorldLike TWorld>
@@ -89,10 +90,11 @@ auto main() -> int
 
     using Lambertian = material::Lambertian<World>;
     using Metal = material::Metal<World>;
+    using Dielectric = material::Dielectric<World>;
 
     auto material_ground = Lambertian{{0.8, 0.8, 0.0}};
-    auto material_center = Lambertian{{0.7, 0.3, 0.3}};
-    auto material_left   = Metal{{0.8, 0.8, 0.8}, 0.3};
+    auto material_center = Dielectric{1.5};
+    auto material_left   = Dielectric{1.5};
     auto material_right  = Metal{{0.8, 0.6, 0.2}, 1.0};
 
     object::HittableList<World> world;

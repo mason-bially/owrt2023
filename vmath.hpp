@@ -216,6 +216,16 @@ namespace vmath
         return v - 2*dot(v,n)*n;
     }
 
+    template<Tup3Affine TN3>
+    constexpr auto refract(TN3 const& uv, TN3 const& n, typename TN3::Num etai_over_etat) {
+        using Num = typename TN3::Num;
+
+        auto cos_theta = std::min(dot(-uv, n), Num(1));
+        auto r_out_perp = etai_over_etat * (uv + cos_theta*n);
+        auto r_out_parallel = -std::sqrt(std::abs(Num(1) - r_out_perp.length_squared())) * n;
+        return r_out_perp + r_out_parallel;
+    }
+
     template<Tup3Like TN3>
     constexpr auto rand_in_sphere(common::RandomState& rs) {
         using Num = typename TN3::Num;

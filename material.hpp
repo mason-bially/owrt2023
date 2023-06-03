@@ -93,4 +93,30 @@ namespace material
                 return std::nullopt;
         }
     };
+
+    template<WorldLike TWorld>
+    struct Dielectric
+    {
+        using World = TWorld;
+        using Num = typename World::Num;
+        using Vec = typename World::Vec;
+        using Ray = typename World::Ray;
+        using Color = typename World::Color;
+        using Scatter = ScatterResult<World>;
+
+        Num ir; // Index of Refraction
+
+        constexpr auto scatter(Ray const& in, auto const& hit_rec, common::RandomState& rs) const -> std::optional<Scatter> {
+            constexpr auto attenuation = Color::White;
+            Num refraction_ratio = hit_rec.front_face ? (1.0/ir) : ir;
+
+            Vec unit_direction = unit_vector(in.direction);
+            Vec refracted = refract(unit_direction, hit_rec.normal, refraction_ratio);
+
+            return Scatter {
+                Ray{hit_rec.point, refracted},
+               attenuation
+            };
+        }
+    };
 }
