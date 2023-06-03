@@ -111,10 +111,18 @@ namespace material
             Num refraction_ratio = hit_rec.front_face ? (1.0/ir) : ir;
 
             Vec unit_direction = unit_vector(in.direction);
-            Vec refracted = refract(unit_direction, hit_rec.normal, refraction_ratio);
+            Num cos_theta = std::min(dot(-unit_direction, hit_rec.normal), 1.0);
+            Num sin_theta = std::sqrt(1.0 - cos_theta*cos_theta);
+
+            bool cannot_refract = refraction_ratio * sin_theta > 1.0;
+            Vec direction;
+            if (cannot_refract)
+                direction = reflect(unit_direction, hit_rec.normal);
+            else
+                direction = refract(unit_direction, hit_rec.normal, refraction_ratio);
 
             return Scatter {
-                Ray{hit_rec.point, refracted},
+                Ray{hit_rec.point, direction},
                attenuation
             };
         }

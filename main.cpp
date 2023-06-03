@@ -93,9 +93,9 @@ auto main() -> int
     using Dielectric = material::Dielectric<World>;
 
     auto material_ground = Lambertian{{0.8, 0.8, 0.0}};
-    auto material_center = Dielectric{1.5};
+    auto material_center = Lambertian{{0.1, 0.2, 0.5}};
     auto material_left   = Dielectric{1.5};
-    auto material_right  = Metal{{0.8, 0.6, 0.2}, 1.0};
+    auto material_right  = Metal{{0.8, 0.6, 0.2}, 0.0};
 
     object::HittableList<World> world;
     world.add<object::Sphere>({{ 0,-100.5,-1}, 100, material_ground});
