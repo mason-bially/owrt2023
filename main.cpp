@@ -76,6 +76,7 @@ auto main() -> int
 
     // weird that one of these is needed...
     using Vec = typename World::Vec;
+    using Loc = typename World::Loc;
     using Color = typename World::Color;
 
     // Image
@@ -117,10 +118,15 @@ auto main() -> int
     */
 
     // Camera
+    Loc look_from {3,3,2};
+    Loc look_to {0,0,-1};
+    Num dist_to_focus = (look_from-Loc{-1,0,-1}).length();
+    Num aperture = 0.5;
 
     camera::SimpleCamera<World> cam(
-        {-2,2,1}, {0,0,-1},
-        Vec::Up, 20, aspect_ratio);
+        look_from, look_to, Vec::Up,
+        20, aspect_ratio,
+        aperture, dist_to_focus);
 
     // Render
 
@@ -138,7 +144,7 @@ auto main() -> int
                 const auto u = Num(i + rand<double>(rs)) / (image_width-1);
                 const auto v = Num(j + rand<double>(rs)) / (image_height-1);
 
-                auto r = cam.get_ray(u, v);
+                auto r = cam.get_ray(u, v, rs);
                 pixel_color += ray_color(r, world, rs, max_depth);
             }
             pixel_color *= (Num(1) / samples_per_pixel);

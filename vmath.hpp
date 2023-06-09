@@ -250,6 +250,16 @@ namespace vmath
     }
 
     template<Tup3Like TN3>
+    constexpr auto rand_in_disk(common::RandomState& rs) {
+        using Num = typename TN3::Num;
+        while (true) {
+            auto p = TN3 { rand<Num>(rs, -1, 1), rand<Num>(rs, -1, 1), 0 };
+            if (p.length_squared() >= 1) continue;
+            return p;
+        }
+    }
+
+    template<Tup3Like TN3>
     constexpr auto rand_unit_vector(common::RandomState& rs) {
         return unit_vector(rand_in_sphere<TN3>(rs));
     }
