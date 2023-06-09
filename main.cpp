@@ -74,12 +74,12 @@ auto main() -> int
         WorldConfig,
         MatDispatch, ObjDispatch>;
 
-    using Vec = typename World::Vec; // weird that this is required
+    using Color = typename World::Color;
 
     // Image
 
     constexpr auto aspect_ratio = 16.0 / 9.0;
-    constexpr int image_width = 400;
+    constexpr int image_width = 800;
     constexpr int image_height = static_cast<int>(image_width / aspect_ratio);
     constexpr int samples_per_pixel = 100;
     constexpr int max_depth = 50;
@@ -92,21 +92,31 @@ auto main() -> int
     using Metal = material::Metal<World>;
     using Dielectric = material::Dielectric<World>;
 
+    object::HittableList<World> world;
+
+    /*
     auto material_ground = Lambertian{{0.8, 0.8, 0.0}};
     auto material_center = Lambertian{{0.1, 0.2, 0.5}};
     auto material_left   = Dielectric{1.5};
     auto material_right  = Metal{{0.8, 0.6, 0.2}, 0.0};
 
-    object::HittableList<World> world;
     world.add<object::Sphere>({{ 0,-100.5,-1}, 100, material_ground});
     world.add<object::Sphere>({{ 0, 0,-1},  0.5, material_center});
     world.add<object::Sphere>({{-1, 0,-1},  0.5, material_left});
     world.add<object::Sphere>({{-1, 0,-1}, -0.4, material_left});
     world.add<object::Sphere>({{ 1, 0,-1},  0.5, material_right});
+    */
+
+    auto material_left   = Lambertian{Color::Blue};
+    auto material_right  = Lambertian{Color::Red};
+
+    auto R = std::cos(common::pi/4);
+    world.add<object::Sphere>({{-R, 0, -1}, R, material_left});
+    world.add<object::Sphere>({{ R, 0, -1}, R, material_right});
 
     // Camera
 
-    camera::SimpleCamera<World> cam;
+    camera::SimpleCamera<World> cam(90, aspect_ratio);
 
     // Render
 

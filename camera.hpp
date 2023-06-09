@@ -29,11 +29,15 @@ namespace camera
             Vec _vertical;
 
         public:
-            SimpleCamera()
-            {
-                auto aspect_ratio = 16.0 / 9.0;
-                auto viewport_height = 2.0;
+            SimpleCamera(
+                Num fov_vertical,
+                Num aspect_ratio
+            ) {
+                auto theta = common::degrees_to_radians(fov_vertical);
+                auto h = std::tan(theta/2);
+                auto viewport_height = 2.0 * h;
                 auto viewport_width = aspect_ratio * viewport_height;
+
                 auto focal_length = 1.0;
 
                 _origin = Loc{0, 0, 0};
