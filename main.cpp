@@ -74,6 +74,8 @@ auto main() -> int
         WorldConfig,
         MatDispatch, ObjDispatch>;
 
+    // weird that one of these is needed...
+    using Vec = typename World::Vec;
     using Color = typename World::Color;
 
     // Image
@@ -94,7 +96,6 @@ auto main() -> int
 
     object::HittableList<World> world;
 
-    /*
     auto material_ground = Lambertian{{0.8, 0.8, 0.0}};
     auto material_center = Lambertian{{0.1, 0.2, 0.5}};
     auto material_left   = Dielectric{1.5};
@@ -105,18 +106,21 @@ auto main() -> int
     world.add<object::Sphere>({{-1, 0,-1},  0.5, material_left});
     world.add<object::Sphere>({{-1, 0,-1}, -0.4, material_left});
     world.add<object::Sphere>({{ 1, 0,-1},  0.5, material_right});
-    */
 
+    /*
     auto material_left   = Lambertian{Color::Blue};
     auto material_right  = Lambertian{Color::Red};
 
     auto R = std::cos(common::pi/4);
     world.add<object::Sphere>({{-R, 0, -1}, R, material_left});
     world.add<object::Sphere>({{ R, 0, -1}, R, material_right});
+    */
 
     // Camera
 
-    camera::SimpleCamera<World> cam(90, aspect_ratio);
+    camera::SimpleCamera<World> cam(
+        {-2,2,1}, {0,0,-1},
+        Vec::Up, 20, aspect_ratio);
 
     // Render
 

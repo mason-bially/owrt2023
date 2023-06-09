@@ -115,14 +115,27 @@ namespace vmath
     }
 
 
-    template<class Num = double>
+    template<class TNum = double>
     struct Vec3
-        : public Tup3Base<Vec3<Num>, Num>
+        : public Tup3Base<Vec3<TNum>, TNum>
     {
-        using Base = Tup3Base<Vec3<Num>, Num>;
+        using Num = TNum;
+
+        using Self = Vec3<TNum>;
+        using Base = Tup3Base<Vec3<TNum>, TNum>;
         using Base::x;
         using Base::y;
         using Base::z;
+
+        static constexpr Num Num0 = 0;
+        static constexpr Num Num1 = Num(1);
+
+        static constexpr Self Up        {  Num0, +Num1,  Num0 };
+        static constexpr Self Down      {  Num0, -Num1,  Num0 };
+        static constexpr Self Forward   {  Num0,  Num0, +Num1 };
+        static constexpr Self Backward  {  Num0,  Num0, -Num1 };
+        static constexpr Self Left      { -Num1,  Num0,  Num0 };
+        static constexpr Self Right     { +Num1,  Num0,  Num0 };
 
         static constexpr auto IsAffineSpace() { return true; }
     };

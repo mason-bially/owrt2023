@@ -112,7 +112,7 @@ namespace color
         using Base::b;
 
         static constexpr Num NumZero = 0;
-        static constexpr Num NumLimit = std::is_floating_point_v<Num> ? 1.0 : std::numeric_limits<TNum>::max();
+        static constexpr Num NumLimit = std::is_floating_point_v<Num> ? 1.0 : std::numeric_limits<Num>::max();
 
         static constexpr Self White { NumLimit, NumLimit, NumLimit };
         static constexpr Self Black { NumZero, NumZero, NumZero };

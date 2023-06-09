@@ -30,6 +30,9 @@ namespace camera
 
         public:
             SimpleCamera(
+                Loc look_from,
+                Loc look_to,
+                Vec upvec,
                 Num fov_vertical,
                 Num aspect_ratio
             ) {
@@ -38,16 +41,18 @@ namespace camera
                 auto viewport_height = 2.0 * h;
                 auto viewport_width = aspect_ratio * viewport_height;
 
-                auto focal_length = 1.0;
+                auto w = unit_vector(look_from - look_to);
+                auto u = unit_vector(cross(upvec, w));
+                auto v = cross(w, u);
 
-                _origin = Loc{0, 0, 0};
-                _horizontal = Vec{viewport_width, 0.0, 0.0};
-                _vertical = Vec{0.0, viewport_height, 0.0};
-                _cornerLowerLeft = _origin - _horizontal/Num(2) - _vertical/Num(2) - Vec{0, 0, focal_length};
+                _origin = look_from;
+                _horizontal = viewport_width * u;
+                _vertical = viewport_height * v;
+                _cornerLowerLeft = _origin - _horizontal/Num(2) - _vertical/Num(2) - w;
             }
 
-            Ray get_ray(Num u, Num v) const {
-                return Ray{_origin, _cornerLowerLeft + u*_horizontal + v*_vertical - _origin};
+            Ray get_ray(Num s, Num t) const {
+                return Ray{_origin, _cornerLowerLeft + s*_horizontal + t*_vertical - _origin};
             }
     };
 }
