@@ -1,6 +1,8 @@
 #include <iostream>
+#include <fstream>
 #include <iomanip>
 #include <variant>
+#include <functional>
 
 #include "owrt.hpp"
 
@@ -8,9 +10,11 @@
 
 #include "camera.hpp"
 
+#define STBI_WRITE_NO_STDIO
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "vendor/stb_image_write.h"
+
 using color::Color3;
-using vmath::Vec3;
-using vmath::Loc3;
 using vmath::Ray;
 
 template<dispatch::WorldLike TWorld>
@@ -114,6 +118,12 @@ void random_scene(object::HittableList<World>& world) {
     world.template add<object::Sphere>({{4, 1, 0}, 1.0, material3});
 }
 
+template<typename... TArgs>
+void invoke_function(void* ptr, TArgs... args)
+{
+    (*static_cast<std::function<void(TArgs...)>*>(ptr))(args...);
+}
+
 auto main() -> int
 {
     // Types
@@ -133,10 +143,12 @@ auto main() -> int
     // Image
 
     constexpr auto aspect_ratio = 16.0 / 9.0;
-    constexpr int image_width = 1200;
+    constexpr int image_width = 800;
     constexpr int image_height = static_cast<int>(image_width / aspect_ratio);
-    constexpr int samples_per_pixel = 500;
+    constexpr int samples_per_pixel = 100;
     constexpr int max_depth = 50;
+
+    std::array<Color3<uint8_t>, image_width * image_height> image;
 
     // World
 
@@ -147,9 +159,10 @@ auto main() -> int
     using Dielectric = material::Dielectric<World>;
 
     object::HittableList<World> world;
-    random_scene<World>(world);
-
     /*
+    random_scene<World>(world);
+    */
+
     auto material_ground = Lambertian{{0.8, 0.8, 0.0}};
     auto material_center = Lambertian{{0.1, 0.2, 0.5}};
     auto material_left   = Dielectric{1.5};
@@ -160,10 +173,8 @@ auto main() -> int
     world.add<object::Sphere>({{-1, 0,-1},  0.5, material_left});
     world.add<object::Sphere>({{-1, 0,-1}, -0.4, material_left});
     world.add<object::Sphere>({{ 1, 0,-1},  0.5, material_right});
-    */
 
     // Camera
-    /*
     Loc look_from {3,3,2};
     Loc look_to {0,0,-1};
     Num dist_to_focus = (look_from-Loc{-1,0,-1}).length();
@@ -173,7 +184,7 @@ auto main() -> int
         look_from, look_to, Vec::Up,
         20, aspect_ratio,
         aperture, dist_to_focus);
-    */
+    /*
     Loc look_from {13,2,3};
     Loc look_to {0,0,0};
     Num dist_to_focus = 10;
@@ -183,10 +194,10 @@ auto main() -> int
         look_from, look_to, Vec::Up,
         20, aspect_ratio,
         aperture, dist_to_focus);
+    */
 
     // Render
 
-    std::cout << "P3\n" << image_width << ' ' << image_height << "\n255\n";
     for (auto j = image_height-1; j >= 0; --j)
     {
         std::cerr << "\rReamining: " 
@@ -194,7 +205,7 @@ auto main() -> int
             << std::flush;
         for (auto i = 0; i < image_width; ++i)
         {
-            Color3<Num> pixel_color;
+            Color pixel_color;
             for (int s = 0; s < samples_per_pixel; ++s)
             {
                 const auto u = Num(i + rand<double>(rs)) / (image_width-1);
@@ -206,10 +217,28 @@ auto main() -> int
             pixel_color *= (Num(1) / samples_per_pixel);
             pixel_color = map(pixel_color, [](auto v){ return std::sqrt(v); });
             pixel_color = clamp(pixel_color, 0.0, 0.9999) * 256;
-            std::cout << color_cast<Color3<uint8_t>>(pixel_color) << '\n';
+
+            image[(image_height-j-1)*image_width + i] = color_cast<Color3<uint8_t>>(pixel_color);
         }
     }
 
+    // Output
+
+    {
+        std::ofstream out_file("out.png");
+        std::function<void(void*, int)> write_func = [&](void* data, int size) {
+            out_file.write((char const*)data, size);
+        };
+        stbi_write_png_to_func(
+            invoke_function<void*, int>, &write_func,
+            image_width, image_height, 3,
+            image.data(), image_width * 3
+        );
+        out_file.close();
+    }
+
+
     std::cerr << "\rComplete." << std::string(20, ' ') << "\n" << std::flush;
+
     return 0;
 }
