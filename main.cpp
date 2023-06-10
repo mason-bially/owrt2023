@@ -11,6 +11,8 @@
 
 #include "camera.hpp"
 
+#include "scheduler.hpp"
+
 #define STBI_WRITE_NO_STDIO
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "vendor/stb_image_write.h"
@@ -146,8 +148,10 @@ auto main() -> int
     constexpr auto aspect_ratio = 16.0 / 9.0;
     constexpr int image_width = 800;
     constexpr int image_height = static_cast<int>(image_width / aspect_ratio);
-    constexpr int samples_per_pixel = 100;
+    constexpr int samples_per_pixel = 50;
     constexpr int max_depth = 50;
+
+    constexpr int samples_per_iter = 10;
 
     auto samples_ptr = std::make_unique<std::array<Color, image_width * image_height>>();
     auto image_ptr = std::make_unique<std::array<Color3<uint8_t>, image_width * image_height>>();
@@ -232,6 +236,8 @@ auto main() -> int
 
     // Render
 
+    scheduler::SchedulerSingle scheduler;
+
     auto sample = [&](auto i, auto j)
     {
             const auto u = Num(i + rand<double>(rs)) / (image_width-1);
@@ -241,25 +247,33 @@ auto main() -> int
             return ray_color(r, world, rs, max_depth);
     };
 
-    for (auto k = 0; k < samples_per_pixel; ++k)
+    for (auto s = 0; s < samples_per_pixel; s+=samples_per_iter)
     {
+        auto samples_this_frame = std::min(samples_per_iter, samples_per_pixel-s);
+
         std::cerr << "\rProgress: " 
-            << std::setw(3) << int(k*1000.0/samples_per_pixel) << "‰"
+            << std::setw(3) << int(s*1000.0/samples_per_pixel) << "‰"
             << std::flush;
 
         for (auto j = 0; j < image_height; ++j)
-            for (auto i = 0; i < image_width; ++i)
-                samples[j*image_width + i] += sample(i, j);
-
-        if (k%10 == 0)
         {
-            quantize_samples(k);
-            output_image();
+            scheduler.schedule([&,j]() {
+                for (auto i = 0; i < image_width; ++i)
+                    for (auto k = 0; k < samples_this_frame; ++k)
+                        samples[j*image_width + i] += sample(i, j);
+            });
         }
-    }
 
-    quantize_samples(samples_per_pixel);
-    output_image();
+        scheduler.wait();
+
+        scheduler.schedule([&,s]() {
+            quantize_samples(s+samples_this_frame);
+            output_image();
+        });
+
+        scheduler.wait();
+    }
+    scheduler.wait();
 
     std::cerr << "\rComplete." << std::string(20, ' ') << "\n" << std::flush;
 
