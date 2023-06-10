@@ -148,7 +148,10 @@ auto main() -> int
     constexpr int samples_per_pixel = 100;
     constexpr int max_depth = 50;
 
-    std::array<Color3<uint8_t>, image_width * image_height> image;
+    auto samples_ptr = std::make_unique<std::array<Color, image_width * image_height>>();
+    auto image_ptr = std::make_unique<std::array<Color3<uint8_t>, image_width * image_height>>();
+    auto& samples = *samples_ptr;
+    auto& image = *image_ptr;
 
     // World
 
@@ -196,35 +199,24 @@ auto main() -> int
         aperture, dist_to_focus);
     */
 
-    // Render
-
-    for (auto j = image_height-1; j >= 0; --j)
-    {
-        std::cerr << "\rReamining: " 
-            << std::setw(3) << int(j*1000.0/image_height) << "‰"
-            << std::flush;
-        for (auto i = 0; i < image_width; ++i)
-        {
-            Color pixel_color;
-            for (int s = 0; s < samples_per_pixel; ++s)
-            {
-                const auto u = Num(i + rand<double>(rs)) / (image_width-1);
-                const auto v = Num(j + rand<double>(rs)) / (image_height-1);
-
-                auto r = cam.get_ray(u, v, rs);
-                pixel_color += ray_color(r, world, rs, max_depth);
-            }
-            pixel_color *= (Num(1) / samples_per_pixel);
-            pixel_color = map(pixel_color, [](auto v){ return std::sqrt(v); });
-            pixel_color = clamp(pixel_color, 0.0, 0.9999) * 256;
-
-            image[(image_height-j-1)*image_width + i] = color_cast<Color3<uint8_t>>(pixel_color);
-        }
-    }
-
     // Output
 
-    {
+    auto quantize_samples = [&](auto s) {
+        for (auto j = 0; j < image_height; ++j)
+        {
+            for (auto i = 0; i < image_width; ++i)
+            {
+                auto pixel_color = samples[(image_height-j-1)*image_width + i];
+                
+                pixel_color *= (Num(1) / s);
+                pixel_color = map(pixel_color, [](auto v){ return std::sqrt(v); });
+                pixel_color = clamp(pixel_color, 0.0, 0.9999) * 256;
+
+                image[j*image_width + i] = color_cast<Color3<uint8_t>>(pixel_color);
+            }
+        }
+    };
+    auto output_image = [&]() {
         std::ofstream out_file("out.png");
         std::function<void(void*, int)> write_func = [&](void* data, int size) {
             out_file.write((char const*)data, size);
@@ -235,8 +227,41 @@ auto main() -> int
             image.data(), image_width * 3
         );
         out_file.close();
+    };
+
+    // Render
+
+    auto sample = [&](auto i, auto j) {
+            const auto u = Num(i + rand<double>(rs)) / (image_width-1);
+            const auto v = Num(j + rand<double>(rs)) / (image_height-1);
+
+            auto r = cam.get_ray(u, v, rs);
+            return ray_color(r, world, rs, max_depth);
+    };
+
+    for (auto k = 0; k < samples_per_pixel; ++k)
+    {
+        std::cerr << "\rProgress: " 
+            << std::setw(3) << int(k*1000.0/samples_per_pixel) << "‰"
+            << std::flush;
+
+        for (auto j = 0; j < image_height; ++j)
+        {
+            for (auto i = 0; i < image_width; ++i)
+            {
+                samples[j*image_width + i] += sample(i, j);
+            }
+        }
+
+        if (k%10 == 0)
+        {
+            quantize_samples(k);
+            output_image();
+        }
     }
 
+    quantize_samples(samples_per_pixel);
+    output_image();
 
     std::cerr << "\rComplete." << std::string(20, ' ') << "\n" << std::flush;
 
