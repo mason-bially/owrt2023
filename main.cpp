@@ -3,6 +3,8 @@
 #include <iomanip>
 #include <variant>
 #include <functional>
+#include <algorithm>
+#include <execution>
 
 #include "owrt.hpp"
 
@@ -153,6 +155,9 @@ auto main() -> int
     auto& samples = *samples_ptr;
     auto& image = *image_ptr;
 
+    std::array<int, image_height> row_indexes;
+    std::iota(row_indexes.begin(), row_indexes.end(), 0);
+
     // World
 
     common::RandomState rs;
@@ -245,13 +250,14 @@ auto main() -> int
             << std::setw(3) << int(k*1000.0/samples_per_pixel) << "‰"
             << std::flush;
 
-        for (auto j = 0; j < image_height; ++j)
-        {
-            for (auto i = 0; i < image_width; ++i)
+        std::for_each(std::execution::seq, row_indexes.begin(), row_indexes.end(),
+            [&](auto j)
             {
-                samples[j*image_width + i] += sample(i, j);
-            }
-        }
+                for (auto i = 0; i < image_width; ++i)
+                {
+                    samples[j*image_width + i] += sample(i, j);
+                }
+            });
 
         if (k%10 == 0)
         {
