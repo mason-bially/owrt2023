@@ -63,6 +63,57 @@ struct WorldConfig
     static constexpr auto lambertian_sampler(Vec normal, common::RandomState& rs) { return sample_hemisphere(normal, rs); }
 };
 
+template<class World>
+void random_scene(object::HittableList<World>& world) {
+    using Num = typename World::Num;
+    using Loc = typename World::Loc;
+    using Color = typename World::Color;
+
+    using Lambertian = material::Lambertian<World>;
+    using Metal = material::Metal<World>;
+    using Dielectric = material::Dielectric<World>;
+
+    common::RandomState rs;
+
+    auto ground_material = Lambertian{{0.5, 0.5, 0.5}};
+    world.template add<object::Sphere>({{0,-1000,0}, 1000, ground_material});
+
+    for (int a = -11; a < 11; a++) {
+        for (int b = -11; b < 11; b++) {
+            auto choose_mat = rand<Num>(rs);
+            Loc center { a + 0.6*rand<Num>(rs), 0.2, b + 0.6*rand<Num>(rs) };
+
+            if ((center - Loc{4, 0.2, 0}).length() > 0.9) {
+                if (choose_mat < 0.8) {
+                    // diffuse
+                    auto albedo = rand<Color>(rs) * rand<Color>(rs);
+                    auto sphere_material = Lambertian{ albedo };
+                    world.template add<object::Sphere>({center, 0.2, sphere_material});
+                } else if (choose_mat < 0.95) {
+                    // metal
+                    auto albedo = rand<Color>(rs, 0.5, 1);
+                    auto fuzz = rand<Num>(rs, 0, 0.5);
+                    auto sphere_material = Metal{albedo, fuzz};
+                    world.template add<object::Sphere>({center, 0.2, sphere_material});
+                } else {
+                    // glass
+                    auto sphere_material = Dielectric{1.5};
+                    world.template add<object::Sphere>({center, 0.2, sphere_material});
+                }
+            }
+        }
+    }
+
+    auto material1 = Dielectric{1.5};
+    world.template add<object::Sphere>({{0, 1, 0}, 1.0, material1});
+
+    auto material2 = Lambertian{{0.4, 0.2, 0.1}};
+    world.template add<object::Sphere>({{-4, 1, 0}, 1.0, material2});
+
+    auto material3 = Metal{{0.7, 0.6, 0.5}, 0.0};
+    world.template add<object::Sphere>({{4, 1, 0}, 1.0, material3});
+}
+
 auto main() -> int
 {
     // Types
@@ -82,9 +133,9 @@ auto main() -> int
     // Image
 
     constexpr auto aspect_ratio = 16.0 / 9.0;
-    constexpr int image_width = 800;
+    constexpr int image_width = 1200;
     constexpr int image_height = static_cast<int>(image_width / aspect_ratio);
-    constexpr int samples_per_pixel = 100;
+    constexpr int samples_per_pixel = 500;
     constexpr int max_depth = 50;
 
     // World
@@ -96,7 +147,9 @@ auto main() -> int
     using Dielectric = material::Dielectric<World>;
 
     object::HittableList<World> world;
+    random_scene<World>(world);
 
+    /*
     auto material_ground = Lambertian{{0.8, 0.8, 0.0}};
     auto material_center = Lambertian{{0.1, 0.2, 0.5}};
     auto material_left   = Dielectric{1.5};
@@ -107,21 +160,24 @@ auto main() -> int
     world.add<object::Sphere>({{-1, 0,-1},  0.5, material_left});
     world.add<object::Sphere>({{-1, 0,-1}, -0.4, material_left});
     world.add<object::Sphere>({{ 1, 0,-1},  0.5, material_right});
-
-    /*
-    auto material_left   = Lambertian{Color::Blue};
-    auto material_right  = Lambertian{Color::Red};
-
-    auto R = std::cos(common::pi/4);
-    world.add<object::Sphere>({{-R, 0, -1}, R, material_left});
-    world.add<object::Sphere>({{ R, 0, -1}, R, material_right});
     */
 
     // Camera
+    /*
     Loc look_from {3,3,2};
     Loc look_to {0,0,-1};
     Num dist_to_focus = (look_from-Loc{-1,0,-1}).length();
     Num aperture = 0.5;
+
+    camera::SimpleCamera<World> cam(
+        look_from, look_to, Vec::Up,
+        20, aspect_ratio,
+        aperture, dist_to_focus);
+    */
+    Loc look_from {13,2,3};
+    Loc look_to {0,0,0};
+    Num dist_to_focus = 10;
+    Num aperture = 0.1;
 
     camera::SimpleCamera<World> cam(
         look_from, look_to, Vec::Up,

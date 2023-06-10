@@ -24,7 +24,7 @@ namespace common
         std::mt19937 generator;
     };
 
-    template<typename TNum>
+    template<std::floating_point TNum>
     constexpr auto rand(RandomState& rs, TNum min=TNum(0), TNum max=TNum(1))
     {
         std::uniform_real_distribution<TNum> distribution(min, max);
@@ -149,8 +149,8 @@ namespace common
         return x;
     }
 
-    template<TupLike TTup, typename TNum = TTup::Num>
-    constexpr auto map(TTup const& tup, std::invocable<TNum> auto f)
+    template<TupLike TTup>
+    constexpr auto map(TTup const& tup, std::invocable<typename TTup::Num> auto f)
     {
         TTup res;
         if constexpr (TTup::size() > 0) get<0>(res) = f(get<0>(tup));
@@ -160,17 +160,23 @@ namespace common
         return res;
     }
 
-    template<TupLike TTup, typename TNum = TTup::Num>
+    template<TupLike TTup>
         requires SimpleTupOps<TTup>
-    constexpr auto clamp(TTup const& tup, TNum min=TNum(0), TNum max=TNum(1))
-    {
+    constexpr auto clamp(
+        TTup const& tup,
+        typename TTup::Num min=typename TTup::Num(0),
+        typename TTup::Num max=typename TTup::Num(1)
+    ) {
         return map(tup, [=](auto v){ return clamp(v, min, max); });
     }
 
-    template<TupLike TTup, typename TNum = TTup::Num>
+    template<TupLike TTup>
         requires SimpleTupOps<TTup>
-    constexpr auto rand(RandomState& rs, TNum min=TNum(0), TNum max=TNum(1))
-    {
+    constexpr auto rand(
+        RandomState& rs,
+        typename TTup::Num min=typename TTup::Num(0),
+        typename TTup::Num max=typename TTup::Num(1)
+    ) {
         return map(TTup {}, [=,&rs](auto _){ return rand(rs, min, max); });
     }
 
