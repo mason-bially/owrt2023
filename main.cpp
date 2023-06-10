@@ -4,7 +4,6 @@
 #include <variant>
 #include <functional>
 #include <algorithm>
-#include <execution>
 
 #include "owrt.hpp"
 
@@ -155,9 +154,6 @@ auto main() -> int
     auto& samples = *samples_ptr;
     auto& image = *image_ptr;
 
-    std::array<int, image_height> row_indexes;
-    std::iota(row_indexes.begin(), row_indexes.end(), 0);
-
     // World
 
     common::RandomState rs;
@@ -206,9 +202,9 @@ auto main() -> int
 
     // Output
 
-    auto quantize_samples = [&](auto s) {
+    auto quantize_samples = [&](auto s)
+    {
         for (auto j = 0; j < image_height; ++j)
-        {
             for (auto i = 0; i < image_width; ++i)
             {
                 auto pixel_color = samples[(image_height-j-1)*image_width + i];
@@ -219,9 +215,9 @@ auto main() -> int
 
                 image[j*image_width + i] = color_cast<Color3<uint8_t>>(pixel_color);
             }
-        }
     };
-    auto output_image = [&]() {
+    auto output_image = [&]()
+    {
         std::ofstream out_file("out.png");
         std::function<void(void*, int)> write_func = [&](void* data, int size) {
             out_file.write((char const*)data, size);
@@ -236,7 +232,8 @@ auto main() -> int
 
     // Render
 
-    auto sample = [&](auto i, auto j) {
+    auto sample = [&](auto i, auto j)
+    {
             const auto u = Num(i + rand<double>(rs)) / (image_width-1);
             const auto v = Num(j + rand<double>(rs)) / (image_height-1);
 
@@ -250,14 +247,9 @@ auto main() -> int
             << std::setw(3) << int(k*1000.0/samples_per_pixel) << "‰"
             << std::flush;
 
-        std::for_each(std::execution::seq, row_indexes.begin(), row_indexes.end(),
-            [&](auto j)
-            {
-                for (auto i = 0; i < image_width; ++i)
-                {
-                    samples[j*image_width + i] += sample(i, j);
-                }
-            });
+        for (auto j = 0; j < image_height; ++j)
+            for (auto i = 0; i < image_width; ++i)
+                samples[j*image_width + i] += sample(i, j);
 
         if (k%10 == 0)
         {
