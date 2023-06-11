@@ -22,6 +22,11 @@ namespace common
 
     struct RandomState {
         std::mt19937 generator;
+
+        inline auto sub()
+        {
+            return RandomState { { generator } };
+        }
     };
 
     template<std::floating_point TNum>

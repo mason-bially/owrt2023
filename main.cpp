@@ -148,10 +148,10 @@ auto main() -> int
     constexpr auto aspect_ratio = 16.0 / 9.0;
     constexpr int image_width = 800;
     constexpr int image_height = static_cast<int>(image_width / aspect_ratio);
-    constexpr int samples_per_pixel = 50;
+    constexpr int samples_per_pixel = 500;
     constexpr int max_depth = 50;
 
-    constexpr int samples_per_iter = 10;
+    constexpr int samples_per_iter = 50;
 
     auto samples_ptr = std::make_unique<std::array<Color, image_width * image_height>>();
     auto image_ptr = std::make_unique<std::array<Color3<uint8_t>, image_width * image_height>>();
@@ -159,8 +159,6 @@ auto main() -> int
     auto& image = *image_ptr;
 
     // World
-
-    common::RandomState rs;
 
     using Lambertian = material::Lambertian<World>;
     using Metal = material::Metal<World>;
@@ -235,10 +233,16 @@ auto main() -> int
     };
 
     // Render
+    static common::RandomState rss;
 
-    scheduler::SchedulerSingle scheduler;
+    struct ThreadLocal {
+        common::RandomState rs;
 
-    auto sample = [&](auto i, auto j)
+        ThreadLocal() : rs(rss.sub()) { }
+    };
+    scheduler::Scheduler<12, ThreadLocal> scheduler;
+
+    auto sample = [&](auto i, auto j, auto& rs)
     {
             const auto u = Num(i + rand<double>(rs)) / (image_width-1);
             const auto v = Num(j + rand<double>(rs)) / (image_height-1);
@@ -257,16 +261,16 @@ auto main() -> int
 
         for (auto j = 0; j < image_height; ++j)
         {
-            scheduler.schedule([&,j]() {
+            scheduler.schedule([&,j](ThreadLocal& tl) {
                 for (auto i = 0; i < image_width; ++i)
                     for (auto k = 0; k < samples_this_frame; ++k)
-                        samples[j*image_width + i] += sample(i, j);
+                        samples[j*image_width + i] += sample(i, j, tl.rs);
             });
         }
 
         scheduler.wait();
 
-        scheduler.schedule([&,s]() {
+        scheduler.schedule([&,s](ThreadLocal& tl) {
             quantize_samples(s+samples_this_frame);
             output_image();
         });
