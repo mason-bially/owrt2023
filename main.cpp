@@ -148,10 +148,10 @@ auto main() -> int
     constexpr auto aspect_ratio = 16.0 / 9.0;
     constexpr int image_width = 800;
     constexpr int image_height = static_cast<int>(image_width / aspect_ratio);
-    constexpr int samples_per_pixel = 500;
+    constexpr int samples_per_pixel = 100;
     constexpr int max_depth = 50;
 
-    constexpr int samples_per_iter = 50;
+    constexpr int samples_per_iter = 10;
 
     auto samples_ptr = std::make_unique<std::array<Color, image_width * image_height>>();
     auto image_ptr = std::make_unique<std::array<Color3<uint8_t>, image_width * image_height>>();
@@ -251,13 +251,20 @@ auto main() -> int
             return ray_color(r, world, rs, max_depth);
     };
 
-    for (auto s = 0; s < samples_per_pixel; s+=samples_per_iter)
+    auto current_sample = 0;
+    std::function<void(double)> print_status = [&](double pct)
     {
-        auto samples_this_frame = std::min(samples_per_iter, samples_per_pixel-s);
+        auto base_pct = current_sample*1000.0/samples_per_pixel;
+        auto next_pct = std::min(current_sample+samples_per_iter, samples_per_pixel)*1000.0/samples_per_pixel;
+        auto full_pct = common::mix(base_pct, next_pct, pct);
 
-        std::cerr << "\rProgress: " 
-            << std::setw(3) << int(s*1000.0/samples_per_pixel) << "‰"
-            << std::flush;
+        //std::cerr << "\rProgress: " 
+        //    << std::setw(3) << int(full_pct) << "‰"
+        //    << std::flush;
+    };
+    for (current_sample = 0; current_sample < samples_per_pixel; current_sample+=samples_per_iter)
+    {
+        auto samples_this_frame = std::min(samples_per_iter, samples_per_pixel-current_sample);
 
         for (auto j = 0; j < image_height; ++j)
         {
@@ -268,16 +275,16 @@ auto main() -> int
             });
         }
 
-        scheduler.wait();
+        scheduler.wait(print_status);
 
-        scheduler.schedule([&,s](ThreadLocal& tl) {
-            quantize_samples(s+samples_this_frame);
+        scheduler.schedule([&,current_sample](ThreadLocal& tl) {
+            quantize_samples(current_sample+samples_this_frame);
             output_image();
         });
 
-        scheduler.wait();
+        scheduler.wait(print_status);
     }
-    scheduler.wait();
+    scheduler.wait(print_status);
 
     std::cerr << "\rComplete." << std::string(20, ' ') << "\n" << std::flush;
 

@@ -132,6 +132,13 @@ namespace common
         return out;
     }
 
+    template<class TNum>
+        requires std::is_floating_point_v<TNum>
+    constexpr auto mix(TNum a, TNum b, TNum v)
+    {
+        return (1-v)*a + v*b;
+    }
+
     template<TupLike TTup>
         requires SimpleTupOps<TTup>
     constexpr auto mix(TTup const& a, TTup const& b)
