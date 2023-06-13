@@ -258,9 +258,9 @@ auto main() -> int
         auto next_pct = std::min(current_sample+samples_per_iter, samples_per_pixel)*1000.0/samples_per_pixel;
         auto full_pct = common::mix(base_pct, next_pct, pct);
 
-        //std::cerr << "\rProgress: " 
-        //    << std::setw(3) << int(full_pct) << "‰"
-        //    << std::flush;
+        std::cerr << "\rProgress: " 
+            << std::setw(3) << int(full_pct) << "‰"
+            << std::flush;
     };
     for (current_sample = 0; current_sample < samples_per_pixel; current_sample+=samples_per_iter)
     {
@@ -275,16 +275,17 @@ auto main() -> int
             });
         }
 
-        scheduler.wait(print_status);
+        scheduler.wait();
 
         scheduler.schedule([&,current_sample](ThreadLocal& tl) {
             quantize_samples(current_sample+samples_this_frame);
             output_image();
         });
 
-        scheduler.wait(print_status);
+        print_status(0);
+        scheduler.wait();
     }
-    scheduler.wait(print_status);
+    scheduler.wait();
 
     std::cerr << "\rComplete." << std::string(20, ' ') << "\n" << std::flush;
 

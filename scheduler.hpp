@@ -172,5 +172,16 @@ namespace scheduler
                     b->workCondition.notify_all();
                 }
             }
+
+            inline void wait()
+            {
+                while(std::ranges::any_of(_blocks, [](auto const& tb){ return tb->pending() > 0; })) {
+                }
+
+                for (auto& b : _blocks) {
+                    b->resetAndSwap();
+                    b->workCondition.notify_all();
+                }
+            }
     };
 }
